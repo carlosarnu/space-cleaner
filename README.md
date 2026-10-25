@@ -4,6 +4,10 @@ Aplicación de escritorio para **liberar espacio en Windows** revisando tus arch
 
 Interfaz moderna en modo oscuro, servida por un backend local en PowerShell y abierta como ventana de aplicación nativa (sin barra de navegación).
 
+![Interfaz de Space Cleaner con las recomendaciones aplicadas](screenshot.png)
+
+> 📸 Captura de la interfaz con datos de ejemplo: los archivos mostrados son ficticios, no corresponden a ningún equipo real.
+
 ---
 
 ## ✨ Características
