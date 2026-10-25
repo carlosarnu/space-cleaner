@@ -1,0 +1,1196 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Limpiador Inteligente de Espacio</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%230284c7'/><text y='78' x='50' text-anchor='middle' font-size='62'>%F0%9F%92%BE</text></svg>">
+<style>
+  :root {
+    --bg-main: #0c1017;
+    --bg-surface: #151c2c;
+    --bg-surface-hover: #1c253b;
+    --bg-card: #182033;
+    --border: #232f48;
+    --border-light: #334466;
+    --text-primary: #f1f5f9;
+    --text-secondary: #94a3b8;
+    --text-muted: #64748b;
+    --color-delete: #ef4444;
+    --color-delete-bg: rgba(239, 68, 68, 0.12);
+    --color-delete-border: rgba(239, 68, 68, 0.35);
+    --color-move: #0ea5e9;
+    --color-move-bg: rgba(14, 165, 233, 0.12);
+    --color-move-border: rgba(14, 165, 233, 0.35);
+    --color-keep: #10b981;
+    --color-keep-bg: rgba(16, 185, 129, 0.12);
+    --color-keep-border: rgba(16, 185, 129, 0.35);
+    --color-warn: #f59e0b;
+    --color-warn-bg: rgba(245, 158, 11, 0.12);
+    --color-warn-border: rgba(245, 158, 11, 0.35);
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 16px;
+    --shadow-sm: 0 2px 4px rgba(0,0,0,0.3);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.4);
+    --shadow-lg: 0 10px 25px rgba(0,0,0,0.5);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg-main);
+    color: var(--text-primary);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow-x: hidden;
+  }
+
+  /* Header */
+  header {
+    background: var(--bg-surface);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    position: sticky;
+    top: 0;
+    z-index: 40;
+  }
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .brand-icon {
+    width: 42px;
+    height: 42px;
+    background: linear-gradient(135deg, #0284c7, #38bdf8);
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
+  }
+  .brand-text h1 {
+    font-size: 1.15rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+  .brand-text p {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+  }
+
+  /* Disks summary */
+  .disks-summary {
+    display: flex;
+    gap: 16px;
+  }
+  .disk-badge {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 8px 14px;
+    min-width: 170px;
+  }
+  .disk-badge-head {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    margin-bottom: 6px;
+    font-weight: 600;
+  }
+  .disk-badge-head span.drive-name {
+    color: #38bdf8;
+  }
+  .disk-meter {
+    height: 6px;
+    background: #232f48;
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .disk-meter-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #0ea5e9, #38bdf8);
+    border-radius: 3px;
+    transition: width 0.4s ease;
+  }
+  .disk-meter-fill.warning {
+    background: linear-gradient(90deg, #f59e0b, #ef4444);
+  }
+  .disk-badge-free {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    margin-top: 4px;
+  }
+  .disk-badge-free strong {
+    color: var(--text-primary);
+  }
+
+  /* Main layout */
+  main {
+    flex: 1;
+    max-width: 1300px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 24px 28px 100px 28px;
+  }
+
+  /* Controls row */
+  .toolbar {
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 16px 20px;
+    margin-bottom: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .toolbar-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .tabs {
+    display: flex;
+    gap: 6px;
+    background: var(--bg-main);
+    padding: 4px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border);
+    overflow-x: auto;
+  }
+  .tab-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    padding: 8px 14px;
+    border-radius: var(--radius-sm);
+    font-size: 0.83rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .tab-btn:hover {
+    color: var(--text-primary);
+    background: var(--bg-surface);
+  }
+  .tab-btn.active {
+    background: #0284c7;
+    color: #fff;
+    box-shadow: 0 2px 6px rgba(2, 132, 199, 0.4);
+  }
+  .tab-count {
+    background: rgba(255,255,255,0.15);
+    padding: 2px 6px;
+    border-radius: 10px;
+    font-size: 0.72rem;
+  }
+
+  .search-sort-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+    min-width: 280px;
+  }
+  .search-box {
+    position: relative;
+    flex: 1;
+  }
+  .search-box input {
+    width: 100%;
+    padding: 9px 14px 9px 36px;
+    background: var(--bg-main);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    color: var(--text-primary);
+    font-size: 0.85rem;
+    outline: none;
+    transition: border 0.2s;
+  }
+  .search-box input:focus {
+    border-color: #38bdf8;
+  }
+  .search-box svg {
+    position: absolute;
+    left: 11px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+  }
+  .sort-select {
+    padding: 9px 14px;
+    background: var(--bg-main);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    color: var(--text-primary);
+    font-size: 0.85rem;
+    cursor: pointer;
+    outline: none;
+  }
+
+  /* Preset action buttons */
+  .quick-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-top: 1px solid var(--border);
+    padding-top: 12px;
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .btn-quick {
+    background: var(--bg-card);
+    border: 1px solid var(--border-light);
+    color: var(--text-primary);
+    padding: 6px 12px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: 500;
+    transition: all 0.2s;
+  }
+  .btn-quick:hover {
+    background: var(--bg-surface-hover);
+    border-color: #38bdf8;
+  }
+
+  /* File cards list */
+  .files-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .file-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    transition: all 0.2s ease;
+    position: relative;
+  }
+  .file-card:hover {
+    border-color: var(--border-light);
+    background: var(--bg-surface-hover);
+  }
+  .file-card.action-delete {
+    border-color: var(--color-delete);
+    background: rgba(239, 68, 68, 0.04);
+  }
+  .file-card.action-move {
+    border-color: var(--color-move);
+    background: rgba(14, 165, 233, 0.04);
+  }
+  .file-card.action-keep {
+    border-color: var(--color-keep);
+    background: rgba(16, 185, 129, 0.04);
+  }
+
+  .file-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex: 1;
+    min-width: 0;
+  }
+  .file-icon-box {
+    width: 46px;
+    height: 46px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    flex-shrink: 0;
+  }
+  .file-meta {
+    flex: 1;
+    min-width: 0;
+  }
+  .file-title-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 4px;
+    flex-wrap: wrap;
+  }
+  .file-name {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    word-break: break-all;
+  }
+  .file-path {
+    font-size: 0.77rem;
+    color: var(--text-muted);
+    font-family: Consolas, monospace;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 650px;
+    margin-bottom: 6px;
+  }
+  .file-tags {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .tag {
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 4px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .tag-size {
+    background: #0284c7;
+    color: #fff;
+  }
+  .tag-age {
+    background: #334155;
+    color: #cbd5e1;
+  }
+  .tag-game {
+    background: #7c3aed;
+    color: #fff;
+  }
+  .tag-cache {
+    background: #0d9488;
+    color: #fff;
+  }
+  .tag-project {
+    background: var(--color-warn-bg);
+    color: #fcd34d;
+    border: 1px solid var(--color-warn-border);
+  }
+  .tag-system {
+    background: #334155;
+    color: #94a3b8;
+  }
+
+  /* File Action Buttons */
+  .file-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+  .act-btn {
+    padding: 8px 14px;
+    border-radius: var(--radius-sm);
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1px solid var(--border-light);
+    background: var(--bg-surface);
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.15s ease;
+  }
+  .act-btn:hover {
+    background: var(--bg-surface-hover);
+    color: var(--text-primary);
+  }
+
+  .act-btn.del.active {
+    background: var(--color-delete);
+    border-color: var(--color-delete);
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.4);
+  }
+  .act-btn.move.active {
+    background: var(--color-move);
+    border-color: var(--color-move);
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(14, 165, 233, 0.4);
+  }
+  .act-btn.keep.active {
+    background: var(--color-keep);
+    border-color: var(--color-keep);
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.4);
+  }
+
+  .btn-reveal {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 8px;
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s;
+  }
+  .btn-reveal:hover {
+    color: #38bdf8;
+    background: var(--bg-surface);
+  }
+
+  /* Sticky Bottom Execution Drawer */
+  .bottom-drawer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(21, 28, 44, 0.95);
+    backdrop-filter: blur(12px);
+    border-top: 1px solid var(--border-light);
+    padding: 16px 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    z-index: 50;
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.5);
+  }
+  .drawer-stats {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    font-size: 0.88rem;
+  }
+  .stat-pill {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .stat-circle {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+  }
+  .stat-circle.del { background: var(--color-delete); }
+  .stat-circle.move { background: var(--color-move); }
+  .stat-circle.keep { background: var(--color-keep); }
+
+  .stat-gain {
+    background: linear-gradient(135deg, rgba(14, 165, 233, 0.15), rgba(16, 185, 129, 0.15));
+    border: 1px solid rgba(56, 189, 248, 0.3);
+    padding: 6px 14px;
+    border-radius: 20px;
+    color: #38bdf8;
+    font-weight: 700;
+  }
+
+  .btn-execute {
+    background: linear-gradient(135deg, #0284c7, #2563eb);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius-md);
+    padding: 12px 24px;
+    font-size: 0.95rem;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4);
+    transition: transform 0.15s, box-shadow 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .btn-execute:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(37, 99, 235, 0.6);
+  }
+  .btn-execute:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    box-shadow: none;
+  }
+
+  /* Modal */
+  .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(4px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    padding: 20px;
+  }
+  .modal-backdrop.show {
+    display: flex;
+  }
+  .modal {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-lg);
+    width: 100%;
+    max-width: 620px;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: var(--shadow-lg);
+    overflow: hidden;
+  }
+  .modal-head {
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .modal-head h2 {
+    font-size: 1.15rem;
+    font-weight: 700;
+  }
+  .modal-body {
+    padding: 20px 24px;
+    overflow-y: auto;
+    font-size: 0.9rem;
+    line-height: 1.5;
+  }
+  .modal-warning {
+    background: var(--color-warn-bg);
+    border: 1px solid var(--color-warn-border);
+    padding: 12px 16px;
+    border-radius: var(--radius-md);
+    margin-bottom: 16px;
+    color: #fcd34d;
+    display: flex;
+    gap: 10px;
+  }
+  .modal-list {
+    background: var(--bg-main);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 12px;
+    max-height: 240px;
+    overflow-y: auto;
+    font-size: 0.8rem;
+    font-family: Consolas, monospace;
+    margin: 12px 0;
+  }
+  .modal-list-item {
+    padding: 4px 0;
+    border-bottom: 1px solid #1a253b;
+    display: flex;
+    justify-content: space-between;
+  }
+  .modal-foot {
+    padding: 16px 24px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+  }
+  .btn-secondary {
+    background: var(--bg-card);
+    border: 1px solid var(--border-light);
+    color: var(--text-primary);
+    padding: 10px 18px;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    font-weight: 600;
+  }
+  .btn-danger {
+    background: linear-gradient(135deg, #dc2626, #b91c1c);
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    font-weight: 700;
+  }
+
+  /* Progress screen */
+  .progress-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(12, 16, 23, 0.92);
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 200;
+    gap: 20px;
+  }
+  .progress-overlay.show {
+    display: flex;
+  }
+  .spinner {
+    width: 50px;
+    height: 50px;
+    border: 4px solid var(--border);
+    border-top-color: #38bdf8;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text-muted);
+  }
+  .empty-state svg {
+    margin-bottom: 12px;
+    opacity: 0.6;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <div class="brand-icon">💾</div>
+    <div class="brand-text">
+      <h1>Limpiador Inteligente de Espacio</h1>
+      <p>Decide qué borrar, qué enviar a tu disco D:\ y qué conservar</p>
+    </div>
+  </div>
+
+  <div class="disks-summary">
+    <div class="disk-badge" id="badgeC">
+      <div class="disk-badge-head">
+        <span class="drive-name">Disco C: (Principal)</span>
+        <span id="diskCPercent">--%</span>
+      </div>
+      <div class="disk-meter"><div class="disk-meter-fill" id="diskCFill" style="width: 50%;"></div></div>
+      <div class="disk-badge-free" id="diskCFree">Libre: Cargando...</div>
+    </div>
+    <div class="disk-badge" id="badgeD">
+      <div class="disk-badge-head">
+        <span class="drive-name">Disco D: (SSD 2 TB)</span>
+        <span id="diskDPercent">--%</span>
+      </div>
+      <div class="disk-meter"><div class="disk-meter-fill" id="diskDFill" style="width: 1%;"></div></div>
+      <div class="disk-badge-free" id="diskDFree">Libre: Cargando...</div>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="toolbar">
+    <div class="toolbar-top">
+      <div class="tabs">
+        <button class="tab-btn active" data-tab="all" onclick="selectTab('all')">
+          Todos <span class="tab-count" id="countAll">0</span>
+        </button>
+        <button class="tab-btn" data-tab="old" onclick="selectTab('old')">
+          🔥 Olvidados (&gt;1 año) <span class="tab-count" id="countOld">0</span>
+        </button>
+        <button class="tab-btn" data-tab="games" onclick="selectTab('games')">
+          🎮 Juegos <span class="tab-count" id="countGames">0</span>
+        </button>
+        <button class="tab-btn" data-tab="cache" onclick="selectTab('cache')">
+          🧹 Cachés y Temporales <span class="tab-count" id="countCache">0</span>
+        </button>
+        <button class="tab-btn" data-tab="project" onclick="selectTab('project')">
+          ⚠️ Proyectos Activos <span class="tab-count" id="countProject">0</span>
+        </button>
+      </div>
+
+      <div class="search-sort-row">
+        <div class="search-box">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+          <input type="text" id="searchInput" placeholder="Buscar por nombre, carpeta o extensión..." oninput="handleSearch()">
+        </div>
+        <select class="sort-select" id="sortSelect" onchange="handleSort()">
+          <option value="sizeDesc">Mayor tamaño</option>
+          <option value="sizeAsc">Menor tamaño</option>
+          <option value="daysDesc">Más antiguo sin usar</option>
+          <option value="nameAsc">Nombre (A-Z)</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="quick-actions">
+      <div>
+        <span>Acciones rápidas automáticas:</span>
+      </div>
+      <div style="display: flex; gap: 8px;">
+        <button class="btn-quick" onclick="applyPreset('recommended')">✨ Aplicar Recomendaciones Inteligentes</button>
+        <button class="btn-quick" onclick="applyPreset('moveGames')">📦 Mover todos los Juegos a D:\</button>
+        <button class="btn-quick" onclick="applyPreset('deleteCache')">🗑️ Borrar Cachés Temporales</button>
+        <button class="btn-quick" onclick="applyPreset('reset')">🔄 Reiniciar Decisiones</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="files-grid" id="filesGrid">
+    <div class="empty-state">
+      <div class="spinner"></div>
+      <p style="margin-top: 14px;">Cargando archivos del inventario...</p>
+    </div>
+  </div>
+</main>
+
+<div class="bottom-drawer">
+  <div class="drawer-stats">
+    <div class="stat-pill">
+      <span class="stat-circle del"></span>
+      <span>Borrar: <strong id="statDelCount">0</strong> (<strong id="statDelSize">0 MB</strong>)</span>
+    </div>
+    <div class="stat-pill">
+      <span class="stat-circle move"></span>
+      <span>Mover a D:\: <strong id="statMoveCount">0</strong> (<strong id="statMoveSize">0 MB</strong>)</span>
+    </div>
+    <div class="stat-pill">
+      <span class="stat-circle keep"></span>
+      <span>Conservar: <strong id="statKeepCount">0</strong></span>
+    </div>
+    <div class="stat-gain" id="statGain">
+      ✨ Liberarás 0 GB en C:
+    </div>
+  </div>
+
+  <button class="btn-execute" id="btnExecute" onclick="openConfirmationModal()" disabled>
+    🚀 Ejecutar Cambios (0 seleccionados)
+  </button>
+</div>
+
+<!-- Modal Confirmation -->
+<div class="modal-backdrop" id="confirmModal">
+  <div class="modal">
+    <div class="modal-head">
+      <h2>Confirmar Acciones</h2>
+      <button class="btn-reveal" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <p>Revisa atentamente el resumen de cambios antes de continuar:</p>
+
+      <div class="modal-warning" id="projectWarning" style="display: none;">
+        <span>⚠️</span>
+        <div>
+          <strong>¡Atención con tu proyecto actual!</strong><br>
+          Has seleccionado archivos que pertenecen a <code>una carpeta de proyecto</code>. Asegúrate de que no estás borrando dependencias necesarias.
+        </div>
+      </div>
+
+      <div style="margin-top: 12px;">
+        <strong style="color: var(--color-delete);">🗑️ Para Borrar definitivamente (<span id="modalDelCount">0</span> archivos, <span id="modalDelSize">0 GB</span>):</strong>
+        <div class="modal-list" id="modalDelList"></div>
+      </div>
+
+      <div style="margin-top: 14px;">
+        <strong style="color: var(--color-move);">📦 Para Mover a D:\ (<span id="modalMoveCount">0</span> archivos, <span id="modalMoveSize">0 GB</span>):</strong>
+        <div class="modal-list" id="modalMoveList"></div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-secondary" onclick="closeModal()">Cancelar</button>
+      <button class="btn-danger" id="btnConfirmExecute" onclick="executeBatch()">Confirmar y Ejecutar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Progress Overlay -->
+<div class="progress-overlay" id="progressOverlay">
+  <div class="spinner"></div>
+  <h2 style="font-size: 1.3rem; font-weight: 700;" id="progressTitle">Procesando archivos...</h2>
+  <p style="color: var(--text-secondary); max-width: 400px; text-align: center;" id="progressSubtitle">
+    Moviendo y eliminando los archivos seleccionados. Por favor espera unos momentos.
+  </p>
+</div>
+
+<script>
+  let allFiles = [];
+  let currentTab = 'all';
+  let decisions = {}; // path -> 'delete' | 'move' | 'keep'
+
+  async function init() {
+    await loadDisks();
+    await loadFiles();
+  }
+
+  async function loadDisks() {
+    try {
+      const res = await fetch('/api/disks');
+      const data = await res.json();
+      if (data.c) {
+        document.getElementById('diskCPercent').textContent = data.c.percentUsed + '%';
+        document.getElementById('diskCFill').style.width = data.c.percentUsed + '%';
+        if (data.c.percentUsed > 80) document.getElementById('diskCFill').classList.add('warning');
+        document.getElementById('diskCFree').innerHTML = `Libre: <strong>${data.c.freeGB} GB</strong> de ${data.c.sizeGB} GB`;
+      }
+      if (data.d && data.d.available) {
+        document.getElementById('diskDPercent').textContent = data.d.percentUsed + '%';
+        document.getElementById('diskDFill').style.width = Math.max(data.d.percentUsed, 1) + '%';
+        document.getElementById('diskDFree').innerHTML = `Libre: <strong>${data.d.freeGB} GB</strong> de ${data.d.sizeGB} GB`;
+      }
+    } catch (e) {
+      console.error("Error al cargar discos", e);
+    }
+  }
+
+  async function loadFiles() {
+    try {
+      const res = await fetch('/api/files');
+      const data = await res.json();
+      allFiles = data.files || [];
+      updateCounts();
+      renderFiles();
+    } catch (e) {
+      document.getElementById('filesGrid').innerHTML = `
+        <div class="empty-state">
+          <p style="color: var(--color-delete); font-size: 1.1rem;">Error al cargar lista de archivos.</p>
+          <p style="color: var(--text-muted); margin-top: 8px;">Asegúrate de que el servidor local está funcionando.</p>
+        </div>
+      `;
+    }
+  }
+
+  function updateCounts() {
+    document.getElementById('countAll').textContent = allFiles.length;
+    document.getElementById('countOld').textContent = allFiles.filter(f => f.days > 365).length;
+    document.getElementById('countGames').textContent = allFiles.filter(f => f.category === 'game').length;
+    document.getElementById('countCache').textContent = allFiles.filter(f => f.category === 'cache').length;
+    document.getElementById('countProject').textContent = allFiles.filter(f => f.category === 'current_project').length;
+  }
+
+  function getFileIcon(f) {
+    if (f.category === 'game') return '🎮';
+    if (f.category === 'cache') return '⚡';
+    if (f.category === 'current_project') return '💻';
+    if (f.isSystem) return '⚙️';
+    const ext = f.ext;
+    if (['mp4','mkv','avi','mov'].includes(ext)) return '🎬';
+    if (['zip','rar','7z','tar','iso'].includes(ext)) return '📦';
+    if (['exe','msi'].includes(ext)) return '🚀';
+    if (['png','jpg','jpeg','webp','gif'].includes(ext)) return '🖼️';
+    return '📄';
+  }
+
+  function formatBytes(bytes) {
+    if (!bytes) return '0 B';
+    if (bytes >= 1073741824) return (bytes / 1073741824).toFixed(2) + ' GB';
+    if (bytes >= 1048576) return (bytes / 1048576).toFixed(1) + ' MB';
+    return (bytes / 1024).toFixed(1) + ' KB';
+  }
+
+  function formatDays(days) {
+    if (days >= 730) return `Hace ${(days/365).toFixed(1)} años (${days} días)`;
+    if (days >= 365) return `Hace 1 año (${days} días)`;
+    if (days >= 60) return `Hace ${(days/30).toFixed(0)} meses`;
+    if (days > 0) return `Hace ${days} días`;
+    return 'Usado hoy / reciente';
+  }
+
+  function selectTab(tab) {
+    currentTab = tab;
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.getAttribute('data-tab') === tab);
+    });
+    renderFiles();
+  }
+
+  function handleSearch() {
+    renderFiles();
+  }
+
+  function handleSort() {
+    renderFiles();
+  }
+
+  function getFilteredFiles() {
+    const q = document.getElementById('searchInput').value.trim().toLowerCase();
+    const sortVal = document.getElementById('sortSelect').value;
+
+    let list = allFiles.filter(f => {
+      // Tab filter
+      if (currentTab === 'old' && f.days <= 365) return false;
+      if (currentTab === 'games' && f.category !== 'game') return false;
+      if (currentTab === 'cache' && f.category !== 'cache') return false;
+      if (currentTab === 'project' && f.category !== 'current_project') return false;
+
+      // Text query
+      if (q) {
+        const matchesName = f.name.toLowerCase().includes(q);
+        const matchesPath = f.path.toLowerCase().includes(q);
+        const matchesExt  = f.ext.toLowerCase().includes(q);
+        if (!matchesName && !matchesPath && !matchesExt) return false;
+      }
+      return true;
+    });
+
+    // Sorting
+    if (sortVal === 'sizeDesc') list.sort((a,b) => b.bytes - a.bytes);
+    else if (sortVal === 'sizeAsc') list.sort((a,b) => a.bytes - b.bytes);
+    else if (sortVal === 'daysDesc') list.sort((a,b) => b.days - a.days);
+    else if (sortVal === 'nameAsc') list.sort((a,b) => a.name.localeCompare(b.name));
+
+    return list;
+  }
+
+  function renderFiles() {
+    const list = getFilteredFiles();
+    const grid = document.getElementById('filesGrid');
+
+    if (list.length === 0) {
+      grid.innerHTML = `
+        <div class="empty-state">
+          <p style="font-size: 1.1rem; color: var(--text-secondary);">No hay archivos que coincidan con la búsqueda o pestaña.</p>
+        </div>
+      `;
+      updateSummary();
+      return;
+    }
+
+    grid.innerHTML = list.map(f => {
+      const dec = decisions[f.path] || 'none';
+      const icon = getFileIcon(f);
+
+      let cardClass = 'file-card';
+      if (dec === 'delete') cardClass += ' action-delete';
+      if (dec === 'move') cardClass += ' action-move';
+      if (dec === 'keep') cardClass += ' action-keep';
+
+      let specialTag = '';
+      if (f.category === 'current_project') {
+        specialTag = '<span class="tag tag-project">⚠️ Proyecto Activo</span>';
+      } else if (f.category === 'game') {
+        specialTag = '<span class="tag tag-game">🎮 Juego Antiguo</span>';
+      } else if (f.category === 'cache') {
+        specialTag = '<span class="tag tag-cache">⚡ Caché / Temporal</span>';
+      } else if (f.isSystem) {
+        specialTag = '<span class="tag tag-system">🔒 Archivo de Sistema</span>';
+      }
+
+      const isLocked = f.isSystem;
+
+      return `
+        <div class="${cardClass}" id="card-${encodeURIComponent(f.path)}">
+          <div class="file-left">
+            <div class="file-icon-box">${icon}</div>
+            <div class="file-meta">
+              <div class="file-title-row">
+                <div class="file-name">${escapeHtml(f.name)}</div>
+                ${specialTag}
+              </div>
+              <div class="file-path" title="${escapeHtml(f.path)}">${escapeHtml(f.path)}</div>
+              <div class="file-tags">
+                <span class="tag tag-size">💾 ${formatBytes(f.bytes)}</span>
+                <span class="tag tag-age">⏱️ ${formatDays(f.days)}</span>
+                ${dec === 'move' ? `<span class="tag" style="background:#0284c7; color:#fff;">➡️ Destino: D:\\...</span>` : ''}
+              </div>
+            </div>
+          </div>
+
+          <div class="file-actions">
+            ${isLocked ? `
+              <span style="font-size: 0.8rem; color: var(--text-muted); font-style: italic;">Protegido por Windows</span>
+            ` : `
+              <button class="act-btn del ${dec==='delete'?'active':''}" onclick="setDecision('${escapeJs(f.path)}', 'delete')">
+                🗑️ Borrar
+              </button>
+              <button class="act-btn move ${dec==='move'?'active':''}" onclick="setDecision('${escapeJs(f.path)}', 'move')">
+                📦 Mover a D:\\
+              </button>
+              <button class="act-btn keep ${dec==='keep'?'active':''}" onclick="setDecision('${escapeJs(f.path)}', 'keep')">
+                🛡️ Conservar
+              </button>
+            `}
+            <button class="btn-reveal" title="Ver en el Explorador de Windows" onclick="revealFile('${escapeJs(f.path)}')">
+              📂
+            </button>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    updateSummary();
+  }
+
+  function setDecision(path, act) {
+    if (decisions[path] === act) {
+      delete decisions[path];
+    } else {
+      decisions[path] = act;
+    }
+    renderFiles();
+  }
+
+  function updateSummary() {
+    let delCount = 0, delBytes = 0;
+    let moveCount = 0, moveBytes = 0;
+    let keepCount = 0;
+
+    allFiles.forEach(f => {
+      const act = decisions[f.path];
+      if (act === 'delete') {
+        delCount++;
+        delBytes += f.bytes;
+      } else if (act === 'move') {
+        moveCount++;
+        moveBytes += f.bytes;
+      } else if (act === 'keep') {
+        keepCount++;
+      }
+    });
+
+    document.getElementById('statDelCount').textContent = delCount;
+    document.getElementById('statDelSize').textContent = formatBytes(delBytes);
+    document.getElementById('statMoveCount').textContent = moveCount;
+    document.getElementById('statMoveSize').textContent = formatBytes(moveBytes);
+    document.getElementById('statKeepCount').textContent = keepCount;
+
+    const totalFreedOnC = delBytes + moveBytes;
+    document.getElementById('statGain').textContent = `✨ Liberarás ${formatBytes(totalFreedOnC)} en C:`;
+
+    const btnExec = document.getElementById('btnExecute');
+    const totalSelected = delCount + moveCount;
+    btnExec.textContent = `🚀 Ejecutar Cambios (${totalSelected} a procesar)`;
+    btnExec.disabled = (totalSelected === 0);
+  }
+
+  function applyPreset(preset) {
+    if (preset === 'recommended') {
+      allFiles.forEach(f => {
+        if (f.isSystem) return;
+        if (f.category === 'current_project') decisions[f.path] = 'keep';
+        else if (f.category === 'cache') decisions[f.path] = 'delete';
+        else if (f.category === 'game') decisions[f.path] = 'move';
+        else if (f.days > 730 && f.bytes > 500 * 1024 * 1024) decisions[f.path] = 'move';
+        else decisions[f.path] = 'keep';
+      });
+    } else if (preset === 'moveGames') {
+      allFiles.filter(f => f.category === 'game').forEach(f => {
+        decisions[f.path] = 'move';
+      });
+    } else if (preset === 'deleteCache') {
+      allFiles.filter(f => f.category === 'cache').forEach(f => {
+        decisions[f.path] = 'delete';
+      });
+    } else if (preset === 'reset') {
+      decisions = {};
+    }
+    renderFiles();
+  }
+
+  async function revealFile(path) {
+    try {
+      await fetch('/api/reveal?path=' + encodeURIComponent(path));
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  function openConfirmationModal() {
+    const toDelete = allFiles.filter(f => decisions[f.path] === 'delete');
+    const toMove   = allFiles.filter(f => decisions[f.path] === 'move');
+
+    let totalDelBytes = toDelete.reduce((a,b)=>a+b.bytes, 0);
+    let totalMoveBytes = toMove.reduce((a,b)=>a+b.bytes, 0);
+
+    document.getElementById('modalDelCount').textContent = toDelete.length;
+    document.getElementById('modalDelSize').textContent = formatBytes(totalDelBytes);
+    document.getElementById('modalMoveCount').textContent = toMove.length;
+    document.getElementById('modalMoveSize').textContent = formatBytes(totalMoveBytes);
+
+    const delList = document.getElementById('modalDelList');
+    if (toDelete.length === 0) {
+      delList.innerHTML = '<div style="color:var(--text-muted);">Ninguno</div>';
+    } else {
+      delList.innerHTML = toDelete.map(f => `
+        <div class="modal-list-item">
+          <span>${escapeHtml(f.name)}</span>
+          <span style="color:var(--text-muted);">${formatBytes(f.bytes)}</span>
+        </div>
+      `).join('');
+    }
+
+    const moveList = document.getElementById('modalMoveList');
+    if (toMove.length === 0) {
+      moveList.innerHTML = '<div style="color:var(--text-muted);">Ninguno</div>';
+    } else {
+      moveList.innerHTML = toMove.map(f => `
+        <div class="modal-list-item">
+          <span>${escapeHtml(f.name)}</span>
+          <span style="color:#38bdf8;">➡️ D:\\...</span>
+        </div>
+      `).join('');
+    }
+
+    // Check if touching current project
+    const hasProject = [...toDelete, ...toMove].some(f => f.category === 'current_project');
+    document.getElementById('projectWarning').style.display = hasProject ? 'flex' : 'none';
+
+    document.getElementById('confirmModal').classList.add('show');
+  }
+
+  function closeModal() {
+    document.getElementById('confirmModal').classList.remove('show');
+  }
+
+  async function executeBatch() {
+    closeModal();
+    const overlay = document.getElementById('progressOverlay');
+    overlay.classList.add('show');
+
+    const actions = [];
+    allFiles.forEach(f => {
+      const act = decisions[f.path];
+      if (act === 'delete' || act === 'move') {
+        actions.push({ path: f.path, action: act });
+      }
+    });
+
+    try {
+      const res = await fetch('/api/execute', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ actions })
+      });
+      const data = await res.json();
+
+      document.getElementById('progressTitle').textContent = "¡Completado con éxito!";
+      document.getElementById('progressSubtitle').innerHTML = `
+        Se han liberado <strong>${data.totalFreedGB} GB</strong> en tu disco C:.<br>
+        Actualizando lista de archivos...
+      `;
+
+      setTimeout(async () => {
+        decisions = {};
+        overlay.classList.remove('show');
+        await loadDisks();
+        await loadFiles();
+      }, 1800);
+
+    } catch (e) {
+      alert("Hubo un error al ejecutar las acciones: " + e.message);
+      overlay.classList.remove('show');
+    }
+  }
+
+  function escapeHtml(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+  function escapeJs(s) {
+    return String(s).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+  }
+
+  init();
+</script>
+
+</body>
+</html>

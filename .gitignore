@@ -1,0 +1,20 @@
+# Datos generados en local — NUNCA subir
+# Inventario de archivos del usuario (rutas y tamaños personales)
+inventario_*.csv
+*.csv
+
+# Estado en tiempo de ejecución
+port.txt
+*.log
+
+# Accesos directos
+*.lnk
+
+# Sistema
+Thumbs.db
+desktop.ini
+.DS_Store
+
+# Entornos
+node_modules/
+__pycache__/
