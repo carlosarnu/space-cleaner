@@ -127,6 +127,10 @@
   .abtn.del.on  { background: var(--red); border-color: var(--red); color: #fff; box-shadow: 0 2px 8px rgba(239,68,68,.4); }
   .abtn.move.on { background: var(--blue); border-color: var(--blue); color: #fff; box-shadow: 0 2px 8px rgba(14,165,233,.4); }
   .abtn.keep.on { background: var(--green); border-color: var(--green); color: #fff; box-shadow: 0 2px 8px rgba(16,185,129,.4); }
+  .abtn:disabled, .abtn.disabled {
+    opacity: .32; cursor: not-allowed; filter: grayscale(.6);
+  }
+  .abtn:disabled:hover, .abtn.disabled:hover { background: var(--surface); color: var(--txt2); }
   .reveal { background: none; border: none; color: var(--txt3); cursor: pointer; padding: 7px; border-radius: 6px; font-size: .95rem; }
   .reveal:hover { color: #38bdf8; background: var(--surface); }
 
@@ -553,19 +557,22 @@ function card(f, idx){
   const dec = decisions.get(f.p) || '';
   const rec = REC[f.r] || REC[0];
   const cat = f.c ? '<span class="t-cat '+CATCLS[f.c]+'">'+CAT[f.c]+'</span>' : '';
-  const cls = dec==='del'?'a-del':dec==='move'?'a-move':dec==='keep'?'a-keep':'';
+  const locked = (f.c === 1 || f.c === 2);   // sistema o programa instalado
+  const cls = (dec==='del'?'a-del':dec==='move'?'a-move':dec==='keep'?'a-keep':'');
   const name = f.p.split('\\').pop();
+  const dis = locked ? ' disabled title="Bloqueado: es un archivo de Windows o de un programa instalado"' : '';
   return '<div class="card '+cls+'" data-i="'+idx+'">'+
     '<div class="left"><div class="ico">'+icon(f.p)+'</div><div class="meta">'+
       '<div class="title"><div class="name">'+esc(name)+'</div>'+cat+
         '<span class="rec '+rec[0]+'" data-why="'+esc(why(f))+'" data-r="'+f.r+'">'+rec[1]+'</span></div>'+
       '<div class="path" title="'+esc(f.p)+'">'+esc(f.p)+'</div>'+
       '<div class="tags"><span class="tag t-size">💾 '+fmtBytes(f.b)+'</span>'+
-        '<span class="tag t-age">⏱️ '+fmtAge(f.d)+'</span></div>'+
+        '<span class="tag t-age">⏱️ '+fmtAge(f.d)+'</span>'+
+        (locked? '<span class="tag" style="background:#1e293b;color:#94a3b8">🔒 Bloqueado</span>':'')+'</div>'+
     '</div></div>'+
     '<div class="acts">'+
-      '<button class="abtn del '+(dec==='del'?'on':'')+'" data-a="del">🗑️ Borrar</button>'+
-      '<button class="abtn move '+(dec==='move'?'on':'')+'" data-a="move">📦 Mover a D:\\</button>'+
+      '<button class="abtn del '+(dec==='del'?'on':'')+'"'+dis+' data-a="del">🗑️ Borrar</button>'+
+      '<button class="abtn move '+(dec==='move'?'on':'')+'"'+dis+' data-a="move">📦 Mover a D:\\</button>'+
       '<button class="abtn keep '+(dec==='keep'?'on':'')+'" data-a="keep">🛡️ Conservar</button>'+
       '<button class="reveal" data-a="reveal" title="Ver en el explorador">📂</button>'+
     '</div></div>';
@@ -577,6 +584,8 @@ $('list').addEventListener('click', e => {
   const card = e.target.closest('.card'); const f = rows[+card.dataset.i]; if (!f) return;
   const a = btn.dataset.a;
   if (a === 'reveal'){ fetch('/api/reveal?path='+encodeURIComponent(f.p)); return; }
+  // Doble bloqueo: ademas del servidor, la interfaz no deja marcar sistema ni programas
+  if ((a === 'del' || a === 'move') && (f.c === 1 || f.c === 2)) return;
   if (decisions.get(f.p) === a) decisions.delete(f.p); else decisions.set(f.p, a);
   // repinta solo esta tarjeta
   card.outerHTML = card2(f, +card.dataset.i);
