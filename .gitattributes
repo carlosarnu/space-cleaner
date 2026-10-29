@@ -1,0 +1,9 @@
+# Normaliza el texto en el repositorio y lo convierte segun la plataforma.
+* text=auto
+
+# El lanzador de lotes necesita CRLF en todas partes, tambien en clones
+# hechos desde Linux o macOS.
+*.bat text eol=crlf
+
+# Binarios
+*.png binary

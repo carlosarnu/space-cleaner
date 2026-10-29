@@ -3,659 +3,207 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Limpiador Inteligente de Espacio</title>
+<title>Space Cleaner — Libera espacio en tu PC</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%230284c7'/><text y='78' x='50' text-anchor='middle' font-size='62'>%F0%9F%92%BE</text></svg>">
 <style>
   :root {
-    --bg-main: #0c1017;
-    --bg-surface: #151c2c;
-    --bg-surface-hover: #1c253b;
-    --bg-card: #182033;
-    --border: #232f48;
-    --border-light: #334466;
-    --text-primary: #f1f5f9;
-    --text-secondary: #94a3b8;
-    --text-muted: #64748b;
-    --color-delete: #ef4444;
-    --color-delete-bg: rgba(239, 68, 68, 0.12);
-    --color-delete-border: rgba(239, 68, 68, 0.35);
-    --color-move: #0ea5e9;
-    --color-move-bg: rgba(14, 165, 233, 0.12);
-    --color-move-border: rgba(14, 165, 233, 0.35);
-    --color-keep: #10b981;
-    --color-keep-bg: rgba(16, 185, 129, 0.12);
-    --color-keep-border: rgba(16, 185, 129, 0.35);
-    --color-warn: #f59e0b;
-    --color-warn-bg: rgba(245, 158, 11, 0.12);
-    --color-warn-border: rgba(245, 158, 11, 0.35);
-    --radius-sm: 6px;
-    --radius-md: 10px;
-    --radius-lg: 16px;
-    --shadow-sm: 0 2px 4px rgba(0,0,0,0.3);
-    --shadow-md: 0 4px 12px rgba(0,0,0,0.4);
-    --shadow-lg: 0 10px 25px rgba(0,0,0,0.5);
+    --bg: #0c1017; --surface: #151c2c; --surface2: #1c253b; --card: #182033;
+    --border: #232f48; --border2: #334466;
+    --txt: #f1f5f9; --txt2: #94a3b8; --txt3: #64748b;
+    --red: #ef4444; --red-bg: rgba(239,68,68,.13);
+    --blue: #0ea5e9; --blue-bg: rgba(14,165,233,.13);
+    --green: #10b981; --green-bg: rgba(16,185,129,.13);
+    --amber: #f59e0b; --amber-bg: rgba(245,158,11,.13);
+    --r: 10px;
   }
-
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    background: var(--bg-main);
-    color: var(--text-primary);
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    overflow-x: hidden;
+    background: var(--bg); color: var(--txt); min-height: 100vh;
+    display: flex; flex-direction: column;
   }
-
-  /* Header */
   header {
-    background: var(--bg-surface);
-    border-bottom: 1px solid var(--border);
-    padding: 16px 28px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 20px;
-    position: sticky;
-    top: 0;
-    z-index: 40;
+    background: var(--surface); border-bottom: 1px solid var(--border);
+    padding: 14px 26px; display: flex; align-items: center; justify-content: space-between;
+    gap: 18px; position: sticky; top: 0; z-index: 40; flex-wrap: wrap;
   }
-  .brand {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
+  .brand { display: flex; align-items: center; gap: 12px; }
   .brand-icon {
-    width: 42px;
-    height: 42px;
-    background: linear-gradient(135deg, #0284c7, #38bdf8);
-    border-radius: var(--radius-md);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 22px;
-    box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
+    width: 42px; height: 42px; border-radius: var(--r);
+    background: linear-gradient(135deg,#0284c7,#38bdf8);
+    display: flex; align-items: center; justify-content: center; font-size: 22px;
+    box-shadow: 0 4px 12px rgba(14,165,233,.3);
   }
-  .brand-text h1 {
-    font-size: 1.15rem;
-    font-weight: 700;
-    letter-spacing: -0.01em;
+  .brand h1 { font-size: 1.15rem; font-weight: 700; letter-spacing: -.01em; }
+  .brand p { font-size: .78rem; color: var(--txt2); }
+  .head-right { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+  .badge-count {
+    background: var(--card); border: 1px solid var(--border); border-radius: 20px;
+    padding: 7px 14px; font-size: .78rem; color: var(--txt2); white-space: nowrap;
   }
-  .brand-text p {
-    font-size: 0.8rem;
-    color: var(--text-secondary);
-  }
+  .badge-count b { color: #38bdf8; font-size: .9rem; }
+  .disk { background: var(--card); border: 1px solid var(--border); border-radius: var(--r); padding: 8px 13px; min-width: 158px; }
+  .disk-head { display: flex; justify-content: space-between; font-size: .73rem; color: var(--txt2); margin-bottom: 6px; font-weight: 600; }
+  .disk-head span:first-child { color: #38bdf8; }
+  .meter { height: 6px; background: #232f48; border-radius: 3px; overflow: hidden; }
+  .meter i { display: block; height: 100%; background: linear-gradient(90deg,#0ea5e9,#38bdf8); border-radius: 3px; transition: width .5s; }
+  .meter i.warn { background: linear-gradient(90deg,#f59e0b,#ef4444); }
+  .disk small { display: block; font-size: .73rem; color: var(--txt2); margin-top: 5px; }
+  .disk small b { color: var(--txt); }
 
-  /* Disks summary */
-  .disks-summary {
-    display: flex;
-    gap: 16px;
-  }
-  .disk-badge {
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-md);
-    padding: 8px 14px;
-    min-width: 170px;
-  }
-  .disk-badge-head {
-    display: flex;
-    justify-content: space-between;
-    font-size: 0.75rem;
-    color: var(--text-secondary);
-    margin-bottom: 6px;
-    font-weight: 600;
-  }
-  .disk-badge-head span.drive-name {
-    color: #38bdf8;
-  }
-  .disk-meter {
-    height: 6px;
-    background: #232f48;
-    border-radius: 3px;
-    overflow: hidden;
-  }
-  .disk-meter-fill {
-    height: 100%;
-    background: linear-gradient(90deg, #0ea5e9, #38bdf8);
-    border-radius: 3px;
-    transition: width 0.4s ease;
-  }
-  .disk-meter-fill.warning {
-    background: linear-gradient(90deg, #f59e0b, #ef4444);
-  }
-  .disk-badge-free {
-    font-size: 0.75rem;
-    color: var(--text-secondary);
-    margin-top: 4px;
-  }
-  .disk-badge-free strong {
-    color: var(--text-primary);
-  }
+  main { flex: 1; width: 100%; max-width: 1320px; margin: 0 auto; padding: 22px 26px 110px; }
 
-  /* Main layout */
-  main {
-    flex: 1;
-    max-width: 1300px;
-    width: 100%;
-    margin: 0 auto;
-    padding: 24px 28px 100px 28px;
+  .toolbar { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 15px 18px; display: flex; flex-direction: column; gap: 13px; }
+  .tabs { display: flex; gap: 6px; background: var(--bg); padding: 4px; border-radius: var(--r); border: 1px solid var(--border); overflow-x: auto; }
+  .tab {
+    background: none; border: none; color: var(--txt2); padding: 8px 13px; border-radius: 6px;
+    font-size: .8rem; font-weight: 600; cursor: pointer; white-space: nowrap;
+    display: flex; align-items: center; gap: 6px; transition: .15s;
   }
+  .tab:hover { color: var(--txt); background: var(--surface); }
+  .tab.on { background: #0284c7; color: #fff; box-shadow: 0 2px 6px rgba(2,132,199,.4); }
+  .tab .n { background: rgba(255,255,255,.14); padding: 1px 6px; border-radius: 9px; font-size: .7rem; }
+  .tab.on .n { background: rgba(0,0,0,.25); }
 
-  /* Controls row */
-  .toolbar {
-    background: var(--bg-surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    padding: 16px 20px;
-    margin-bottom: 24px;
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
+  .row2 { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+  .search { position: relative; flex: 1; min-width: 240px; }
+  .search input {
+    width: 100%; padding: 9px 14px 9px 36px; background: var(--bg); border: 1px solid var(--border);
+    border-radius: var(--r); color: var(--txt); font-size: .87rem; outline: none; transition: .2s;
   }
-  .toolbar-top {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-    flex-wrap: wrap;
+  .search input:focus { border-color: #38bdf8; }
+  .search svg { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); color: var(--txt3); }
+  select.sort {
+    padding: 9px 13px; background: var(--bg); border: 1px solid var(--border); border-radius: var(--r);
+    color: var(--txt); font-size: .87rem; cursor: pointer; outline: none;
   }
-  .tabs {
-    display: flex;
-    gap: 6px;
-    background: var(--bg-main);
-    padding: 4px;
-    border-radius: var(--radius-md);
-    border: 1px solid var(--border);
-    overflow-x: auto;
-  }
-  .tab-btn {
-    background: transparent;
-    border: none;
-    color: var(--text-secondary);
-    padding: 8px 14px;
-    border-radius: var(--radius-sm);
-    font-size: 0.83rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s;
-    white-space: nowrap;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-  .tab-btn:hover {
-    color: var(--text-primary);
-    background: var(--bg-surface);
-  }
-  .tab-btn.active {
-    background: #0284c7;
-    color: #fff;
-    box-shadow: 0 2px 6px rgba(2, 132, 199, 0.4);
-  }
-  .tab-count {
-    background: rgba(255,255,255,0.15);
-    padding: 2px 6px;
-    border-radius: 10px;
-    font-size: 0.72rem;
-  }
+  .quick { display: flex; gap: 8px; align-items: center; justify-content: space-between; border-top: 1px solid var(--border); padding-top: 12px; flex-wrap: wrap; font-size: .8rem; color: var(--txt2); }
+  .quick .btns { display: flex; gap: 8px; flex-wrap: wrap; }
+  .qbtn { background: var(--card); border: 1px solid var(--border2); color: var(--txt); padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: .78rem; font-weight: 500; transition: .15s; }
+  .qbtn:hover { background: var(--surface2); border-color: #38bdf8; }
 
-  .search-sort-row {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    flex: 1;
-    min-width: 280px;
-  }
-  .search-box {
-    position: relative;
-    flex: 1;
-  }
-  .search-box input {
-    width: 100%;
-    padding: 9px 14px 9px 36px;
-    background: var(--bg-main);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-md);
-    color: var(--text-primary);
-    font-size: 0.85rem;
-    outline: none;
-    transition: border 0.2s;
-  }
-  .search-box input:focus {
-    border-color: #38bdf8;
-  }
-  .search-box svg {
-    position: absolute;
-    left: 11px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: var(--text-muted);
-  }
-  .sort-select {
-    padding: 9px 14px;
-    background: var(--bg-main);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-md);
-    color: var(--text-primary);
-    font-size: 0.85rem;
-    cursor: pointer;
-    outline: none;
-  }
+  .listinfo { display: flex; justify-content: space-between; align-items: center; margin: 16px 2px 11px; font-size: .82rem; color: var(--txt2); gap: 12px; flex-wrap: wrap; }
+  .listinfo b { color: var(--txt); }
 
-  /* Preset action buttons */
-  .quick-actions {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    border-top: 1px solid var(--border);
-    padding-top: 12px;
-    font-size: 0.82rem;
-    color: var(--text-secondary);
-    flex-wrap: wrap;
-    gap: 10px;
+  .grid { display: flex; flex-direction: column; gap: 11px; }
+  .card {
+    background: var(--card); border: 1px solid var(--border); border-radius: var(--r);
+    padding: 15px 18px; display: flex; align-items: center; justify-content: space-between;
+    gap: 16px; transition: .15s;
   }
-  .btn-quick {
-    background: var(--bg-card);
-    border: 1px solid var(--border-light);
-    color: var(--text-primary);
-    padding: 6px 12px;
-    border-radius: var(--radius-sm);
-    cursor: pointer;
-    font-size: 0.8rem;
-    font-weight: 500;
-    transition: all 0.2s;
-  }
-  .btn-quick:hover {
-    background: var(--bg-surface-hover);
-    border-color: #38bdf8;
-  }
+  .card:hover { border-color: var(--border2); background: var(--surface2); }
+  .card.a-del { border-color: var(--red); background: rgba(239,68,68,.05); }
+  .card.a-move { border-color: var(--blue); background: rgba(14,165,233,.05); }
+  .card.a-keep { border-color: var(--green); background: rgba(16,185,129,.05); }
+  .left { display: flex; align-items: center; gap: 15px; flex: 1; min-width: 0; }
+  .ico { width: 44px; height: 44px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); display: flex; align-items: center; justify-content: center; font-size: 21px; flex-shrink: 0; }
+  .meta { flex: 1; min-width: 0; }
+  .title { display: flex; align-items: center; gap: 9px; margin-bottom: 3px; flex-wrap: wrap; }
+  .name { font-size: .93rem; font-weight: 600; word-break: break-all; }
+  .path { font-size: .75rem; color: var(--txt3); font-family: Consolas, monospace; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 7px; }
+  .tags { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .tag { font-size: .7rem; font-weight: 600; padding: 3px 8px; border-radius: 5px; display: inline-flex; align-items: center; gap: 4px; }
+  .t-size { background: #0284c7; color: #fff; }
+  .t-age { background: #334155; color: #cbd5e1; }
+  .t-cat { background: #3b2f6b; color: #c4b5fd; }
+  .t-cat.game { background: #5b21b6; color: #fff; }
+  .t-cat.cache { background: #0f766e; color: #fff; }
+  .t-cat.sys { background: #334155; color: #94a3b8; }
+  .t-cat.proj { background: var(--amber-bg); color: #fcd34d; border: 1px solid rgba(245,158,11,.35); }
 
-  /* File cards list */
-  .files-grid {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-  }
-  .file-card {
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-md);
-    padding: 16px 20px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-    transition: all 0.2s ease;
-    position: relative;
-  }
-  .file-card:hover {
-    border-color: var(--border-light);
-    background: var(--bg-surface-hover);
-  }
-  .file-card.action-delete {
-    border-color: var(--color-delete);
-    background: rgba(239, 68, 68, 0.04);
-  }
-  .file-card.action-move {
-    border-color: var(--color-move);
-    background: rgba(14, 165, 233, 0.04);
-  }
-  .file-card.action-keep {
-    border-color: var(--color-keep);
-    background: rgba(16, 185, 129, 0.04);
-  }
+  /* --- badge recomendacion + tooltip --- */
+  .rec { font-size: .7rem; font-weight: 700; padding: 3px 9px; border-radius: 5px; cursor: help; text-transform: none; }
+  .rec.si  { background: var(--green-bg); color: #34d399; border: 1px solid rgba(16,185,129,.4); }
+  .rec.no  { background: var(--red-bg); color: #f87171; border: 1px solid rgba(239,68,68,.4); }
+  .rec.rev { background: var(--amber-bg); color: #fcd34d; border: 1px solid rgba(245,158,11,.4); }
 
-  .file-left {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    flex: 1;
-    min-width: 0;
+  .acts { display: flex; align-items: center; gap: 7px; flex-shrink: 0; }
+  .abtn {
+    padding: 7px 13px; border-radius: 6px; font-size: .78rem; font-weight: 600; cursor: pointer;
+    border: 1px solid var(--border2); background: var(--surface); color: var(--txt2);
+    display: flex; align-items: center; gap: 5px; transition: .15s;
   }
-  .file-icon-box {
-    width: 46px;
-    height: 46px;
-    background: var(--bg-surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-md);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 22px;
-    flex-shrink: 0;
-  }
-  .file-meta {
-    flex: 1;
-    min-width: 0;
-  }
-  .file-title-row {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 4px;
-    flex-wrap: wrap;
-  }
-  .file-name {
-    font-size: 0.95rem;
-    font-weight: 600;
-    color: var(--text-primary);
-    word-break: break-all;
-  }
-  .file-path {
-    font-size: 0.77rem;
-    color: var(--text-muted);
-    font-family: Consolas, monospace;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 650px;
-    margin-bottom: 6px;
-  }
-  .file-tags {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex-wrap: wrap;
-  }
-  .tag {
-    font-size: 0.72rem;
-    font-weight: 600;
-    padding: 3px 8px;
-    border-radius: 4px;
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-  }
-  .tag-size {
-    background: #0284c7;
-    color: #fff;
-  }
-  .tag-age {
-    background: #334155;
-    color: #cbd5e1;
-  }
-  .tag-game {
-    background: #7c3aed;
-    color: #fff;
-  }
-  .tag-cache {
-    background: #0d9488;
-    color: #fff;
-  }
-  .tag-project {
-    background: var(--color-warn-bg);
-    color: #fcd34d;
-    border: 1px solid var(--color-warn-border);
-  }
-  .tag-system {
-    background: #334155;
-    color: #94a3b8;
-  }
+  .abtn:hover { background: var(--surface2); color: var(--txt); }
+  .abtn.del.on  { background: var(--red); border-color: var(--red); color: #fff; box-shadow: 0 2px 8px rgba(239,68,68,.4); }
+  .abtn.move.on { background: var(--blue); border-color: var(--blue); color: #fff; box-shadow: 0 2px 8px rgba(14,165,233,.4); }
+  .abtn.keep.on { background: var(--green); border-color: var(--green); color: #fff; box-shadow: 0 2px 8px rgba(16,185,129,.4); }
+  .reveal { background: none; border: none; color: var(--txt3); cursor: pointer; padding: 7px; border-radius: 6px; font-size: .95rem; }
+  .reveal:hover { color: #38bdf8; background: var(--surface); }
 
-  /* File Action Buttons */
-  .file-actions {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex-shrink: 0;
-  }
-  .act-btn {
-    padding: 8px 14px;
-    border-radius: var(--radius-sm);
-    font-size: 0.82rem;
-    font-weight: 600;
-    cursor: pointer;
-    border: 1px solid var(--border-light);
-    background: var(--bg-surface);
-    color: var(--text-secondary);
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    transition: all 0.15s ease;
-  }
-  .act-btn:hover {
-    background: var(--bg-surface-hover);
-    color: var(--text-primary);
-  }
+  .loader { text-align: center; padding: 26px; color: var(--txt3); font-size: .85rem; display: flex; align-items: center; justify-content: center; gap: 10px; }
+  .spin { width: 20px; height: 20px; border: 3px solid var(--border); border-top-color: #38bdf8; border-radius: 50%; animation: sp .8s linear infinite; }
+  @keyframes sp { to { transform: rotate(360deg); } }
+  .note { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 15px; text-align: center; color: var(--txt2); font-size: .85rem; margin-top: 4px; }
+  .note button { margin-left: 10px; }
 
-  .act-btn.del.active {
-    background: var(--color-delete);
-    border-color: var(--color-delete);
-    color: #fff;
-    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.4);
-  }
-  .act-btn.move.active {
-    background: var(--color-move);
-    border-color: var(--color-move);
-    color: #fff;
-    box-shadow: 0 2px 8px rgba(14, 165, 233, 0.4);
-  }
-  .act-btn.keep.active {
-    background: var(--color-keep);
-    border-color: var(--color-keep);
-    color: #fff;
-    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.4);
-  }
+  .empty { text-align: center; padding: 55px 20px; color: var(--txt3); }
 
-  .btn-reveal {
-    background: transparent;
-    border: none;
-    color: var(--text-muted);
-    cursor: pointer;
-    padding: 8px;
-    border-radius: var(--radius-sm);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: color 0.2s;
+  /* barra inferior */
+  .drawer {
+    position: fixed; bottom: 0; left: 0; right: 0; background: rgba(21,28,44,.96);
+    backdrop-filter: blur(12px); border-top: 1px solid var(--border2); padding: 15px 26px;
+    display: flex; align-items: center; justify-content: space-between; z-index: 50;
+    box-shadow: 0 -4px 20px rgba(0,0,0,.5); gap: 16px; flex-wrap: wrap;
   }
-  .btn-reveal:hover {
-    color: #38bdf8;
-    background: var(--bg-surface);
+  .stats { display: flex; align-items: center; gap: 20px; font-size: .85rem; flex-wrap: wrap; }
+  .sp { display: flex; align-items: center; gap: 7px; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; }
+  .dot.d1 { background: var(--red); } .dot.d2 { background: var(--blue); } .dot.d3 { background: var(--green); }
+  .gain { background: linear-gradient(135deg,rgba(14,165,233,.15),rgba(16,185,129,.15)); border: 1px solid rgba(56,189,248,.3); padding: 6px 14px; border-radius: 20px; color: #38bdf8; font-weight: 700; }
+  .exec {
+    background: linear-gradient(135deg,#0284c7,#2563eb); color: #fff; border: none; border-radius: var(--r);
+    padding: 12px 24px; font-size: .92rem; font-weight: 700; cursor: pointer;
+    box-shadow: 0 4px 14px rgba(37,99,235,.4); transition: .15s; display: flex; align-items: center; gap: 8px;
   }
+  .exec:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(37,99,235,.6); }
+  .exec:disabled { opacity: .4; cursor: not-allowed; box-shadow: none; }
 
-  /* Sticky Bottom Execution Drawer */
-  .bottom-drawer {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    background: rgba(21, 28, 44, 0.95);
-    backdrop-filter: blur(12px);
-    border-top: 1px solid var(--border-light);
-    padding: 16px 28px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    z-index: 50;
-    box-shadow: 0 -4px 20px rgba(0,0,0,0.5);
+  /* tooltip flotante */
+  #tip {
+    position: fixed; z-index: 999; max-width: 380px; background: #0f1626; color: #e2e8f0;
+    border: 1px solid var(--border2); border-radius: 9px; padding: 11px 14px; font-size: .79rem;
+    line-height: 1.55; box-shadow: 0 10px 30px rgba(0,0,0,.6); pointer-events: none;
+    opacity: 0; visibility: hidden; transition: opacity .12s; display: none;
   }
-  .drawer-stats {
-    display: flex;
-    align-items: center;
-    gap: 24px;
-    font-size: 0.88rem;
-  }
-  .stat-pill {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-  .stat-circle {
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-  }
-  .stat-circle.del { background: var(--color-delete); }
-  .stat-circle.move { background: var(--color-move); }
-  .stat-circle.keep { background: var(--color-keep); }
+  #tip.show { opacity: 1; visibility: visible; }
+  #tip .th { font-weight: 700; display: block; margin-bottom: 5px; font-size: .8rem; }
+  #tip .th.si { color: #34d399; } #tip .th.no { color: #f87171; } #tip .th.rev { color: #fcd34d; }
 
-  .stat-gain {
-    background: linear-gradient(135deg, rgba(14, 165, 233, 0.15), rgba(16, 185, 129, 0.15));
-    border: 1px solid rgba(56, 189, 248, 0.3);
-    padding: 6px 14px;
-    border-radius: 20px;
-    color: #38bdf8;
-    font-weight: 700;
-  }
+  /* modal */
+  .backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.75); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; z-index: 100; padding: 20px; }
+  .backdrop.show { display: flex; }
+  .modal { background: var(--surface); border: 1px solid var(--border2); border-radius: 16px; width: 100%; max-width: 640px; max-height: 86vh; display: flex; flex-direction: column; box-shadow: 0 20px 50px rgba(0,0,0,.6); overflow: hidden; }
+  .mhead { padding: 19px 23px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+  .mhead h2 { font-size: 1.1rem; }
+  .mclose { background: none; border: none; color: var(--txt2); font-size: 1.1rem; cursor: pointer; }
+  .mbody { padding: 19px 23px; overflow-y: auto; font-size: .88rem; line-height: 1.55; }
+  .warn { background: var(--amber-bg); border: 1px solid rgba(245,158,11,.4); padding: 12px 15px; border-radius: var(--r); margin-bottom: 15px; color: #fcd34d; }
+  .mlist { background: var(--bg); border: 1px solid var(--border); border-radius: var(--r); padding: 11px; max-height: 210px; overflow-y: auto; font-size: .76rem; font-family: Consolas, monospace; margin: 9px 0 16px; }
+  .mi { padding: 4px 0; border-bottom: 1px solid #1a253b; display: flex; justify-content: space-between; gap: 12px; }
+  .mi span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .mfoot { padding: 15px 23px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 11px; }
+  .bsec { background: var(--card); border: 1px solid var(--border2); color: var(--txt); padding: 10px 18px; border-radius: var(--r); cursor: pointer; font-weight: 600; }
+  .bdan { background: linear-gradient(135deg,#dc2626,#b91c1c); color: #fff; border: none; padding: 10px 20px; border-radius: var(--r); cursor: pointer; font-weight: 700; }
 
-  .btn-execute {
-    background: linear-gradient(135deg, #0284c7, #2563eb);
-    color: #fff;
-    border: none;
-    border-radius: var(--radius-md);
-    padding: 12px 24px;
-    font-size: 0.95rem;
-    font-weight: 700;
-    cursor: pointer;
-    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4);
-    transition: transform 0.15s, box-shadow 0.15s;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-  .btn-execute:hover:not(:disabled) {
-    transform: translateY(-1px);
-    box-shadow: 0 6px 20px rgba(37, 99, 235, 0.6);
-  }
-  .btn-execute:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
-    box-shadow: none;
-  }
+  /* pantalla escaneo */
+  .scan { display: none; max-width: 680px; margin: 60px auto; background: var(--surface); border: 1px solid var(--border); border-radius: 18px; padding: 42px 38px; text-align: center; }
+  .scan.show { display: block; }
+  .scan .big { font-size: 46px; margin-bottom: 16px; }
+  .scan h2 { font-size: 1.4rem; margin-bottom: 12px; }
+  .scan p { color: var(--txt2); font-size: .92rem; line-height: 1.6; margin-bottom: 22px; }
+  .scan .go { background: linear-gradient(135deg,#0284c7,#2563eb); color: #fff; border: none; border-radius: var(--r); padding: 14px 30px; font-size: 1rem; font-weight: 700; cursor: pointer; box-shadow: 0 4px 14px rgba(37,99,235,.4); }
+  .scan .go:disabled { opacity: .5; cursor: wait; }
+  .prog { display: none; margin-top: 26px; text-align: left; }
+  .prog.show { display: block; }
+  .prog .bar { height: 9px; background: var(--bg); border-radius: 5px; overflow: hidden; margin-bottom: 12px; }
+  .prog .bar i { display: block; height: 100%; width: 40%; background: linear-gradient(90deg,#0ea5e9,#38bdf8); border-radius: 5px; animation: slide 1.4s ease-in-out infinite; }
+  @keyframes slide { 0%{margin-left:-40%} 100%{margin-left:100%} }
+  .prog .n { font-size: 1.6rem; font-weight: 700; color: #38bdf8; }
+  .prog .cur { font-size: .74rem; color: var(--txt3); font-family: Consolas, monospace; word-break: break-all; margin-top: 7px; }
 
-  /* Modal */
-  .modal-backdrop {
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.75);
-    backdrop-filter: blur(4px);
-    display: none;
-    align-items: center;
-    justify-content: center;
-    z-index: 100;
-    padding: 20px;
-  }
-  .modal-backdrop.show {
-    display: flex;
-  }
-  .modal {
-    background: var(--bg-surface);
-    border: 1px solid var(--border-light);
-    border-radius: var(--radius-lg);
-    width: 100%;
-    max-width: 620px;
-    max-height: 85vh;
-    display: flex;
-    flex-direction: column;
-    box-shadow: var(--shadow-lg);
-    overflow: hidden;
-  }
-  .modal-head {
-    padding: 20px 24px;
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  .modal-head h2 {
-    font-size: 1.15rem;
-    font-weight: 700;
-  }
-  .modal-body {
-    padding: 20px 24px;
-    overflow-y: auto;
-    font-size: 0.9rem;
-    line-height: 1.5;
-  }
-  .modal-warning {
-    background: var(--color-warn-bg);
-    border: 1px solid var(--color-warn-border);
-    padding: 12px 16px;
-    border-radius: var(--radius-md);
-    margin-bottom: 16px;
-    color: #fcd34d;
-    display: flex;
-    gap: 10px;
-  }
-  .modal-list {
-    background: var(--bg-main);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-md);
-    padding: 12px;
-    max-height: 240px;
-    overflow-y: auto;
-    font-size: 0.8rem;
-    font-family: Consolas, monospace;
-    margin: 12px 0;
-  }
-  .modal-list-item {
-    padding: 4px 0;
-    border-bottom: 1px solid #1a253b;
-    display: flex;
-    justify-content: space-between;
-  }
-  .modal-foot {
-    padding: 16px 24px;
-    border-top: 1px solid var(--border);
-    display: flex;
-    justify-content: flex-end;
-    gap: 12px;
-  }
-  .btn-secondary {
-    background: var(--bg-card);
-    border: 1px solid var(--border-light);
-    color: var(--text-primary);
-    padding: 10px 18px;
-    border-radius: var(--radius-md);
-    cursor: pointer;
-    font-weight: 600;
-  }
-  .btn-danger {
-    background: linear-gradient(135deg, #dc2626, #b91c1c);
-    color: #fff;
-    border: none;
-    padding: 10px 20px;
-    border-radius: var(--radius-md);
-    cursor: pointer;
-    font-weight: 700;
-  }
-
-  /* Progress screen */
-  .progress-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(12, 16, 23, 0.92);
-    display: none;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    z-index: 200;
-    gap: 20px;
-  }
-  .progress-overlay.show {
-    display: flex;
-  }
-  .spinner {
-    width: 50px;
-    height: 50px;
-    border: 4px solid var(--border);
-    border-top-color: #38bdf8;
-    border-radius: 50%;
-    animation: spin 0.8s linear infinite;
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
-
-  .empty-state {
-    text-align: center;
-    padding: 60px 20px;
-    color: var(--text-muted);
-  }
-  .empty-state svg {
-    margin-bottom: 12px;
-    opacity: 0.6;
-  }
+  /* overlay progreso ejecucion */
+  .ovl { position: fixed; inset: 0; background: rgba(12,16,23,.93); display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 200; gap: 18px; }
+  .ovl.show { display: flex; }
 </style>
 </head>
 <body>
@@ -663,534 +211,506 @@
 <header>
   <div class="brand">
     <div class="brand-icon">💾</div>
-    <div class="brand-text">
-      <h1>Limpiador Inteligente de Espacio</h1>
-      <p>Decide qué borrar, qué enviar a tu disco D:\ y qué conservar</p>
+    <div>
+      <h1>Space Cleaner</h1>
+      <p>Revisa cada archivo: bórralo, muévelo a D:\ o consérvalo</p>
     </div>
   </div>
-
-  <div class="disks-summary">
-    <div class="disk-badge" id="badgeC">
-      <div class="disk-badge-head">
-        <span class="drive-name">Disco C: (Principal)</span>
-        <span id="diskCPercent">--%</span>
-      </div>
-      <div class="disk-meter"><div class="disk-meter-fill" id="diskCFill" style="width: 50%;"></div></div>
-      <div class="disk-badge-free" id="diskCFree">Libre: Cargando...</div>
+  <div class="head-right">
+    <div class="badge-count" id="totalBadge" style="display:none"><b id="tbNum">–</b> archivos · <b id="tbSize">–</b></div>
+    <div class="disk" id="diskC" style="display:none">
+      <div class="disk-head"><span>Disco C:</span><span id="pC">–</span></div>
+      <div class="meter"><i id="mC" style="width:0%"></i></div>
+      <small>Libre: <b id="fC">–</b></small>
     </div>
-    <div class="disk-badge" id="badgeD">
-      <div class="disk-badge-head">
-        <span class="drive-name">Disco D: (SSD 2 TB)</span>
-        <span id="diskDPercent">--%</span>
-      </div>
-      <div class="disk-meter"><div class="disk-meter-fill" id="diskDFill" style="width: 1%;"></div></div>
-      <div class="disk-badge-free" id="diskDFree">Libre: Cargando...</div>
+    <div class="disk" id="diskD" style="display:none">
+      <div class="disk-head"><span>Disco D:</span><span id="pD">–</span></div>
+      <div class="meter"><i id="mD" style="width:0%"></i></div>
+      <small>Libre: <b id="fD">–</b></small>
     </div>
   </div>
 </header>
 
-<main>
+<!-- ============ PANTALLA DE ESCANEO ============ -->
+<section class="scan" id="scanScreen">
+  <div class="big">🔍</div>
+  <h2 id="scanTitle">Indexando tu PC…</h2>
+  <p id="scanDesc">Space Cleaner está recorriendo todos tus discos para construir el índice completo
+     de archivos. Esto se hace <b>una sola vez</b>: después, la app arranca al instante.</p>
+  <button class="go" id="scanBtn" onclick="startScan()">🔍 Escanear mi PC ahora</button>
+  <div class="prog" id="scanProg">
+    <div class="bar"><i></i></div>
+    <div><span class="n" id="scFiles">0</span> <span style="color:#94a3b8">archivos indexados</span></div>
+    <div style="font-size:.85rem;color:#94a3b8;margin-top:6px">Libreado: <b id="scSize" style="color:#e2e8f0">0 GB</b></div>
+    <div class="cur" id="scCur"></div>
+  </div>
+</section>
+
+<!-- ============ APLICACION ============ -->
+<main id="appMain" style="display:none">
   <div class="toolbar">
-    <div class="toolbar-top">
-      <div class="tabs">
-        <button class="tab-btn active" data-tab="all" onclick="selectTab('all')">
-          Todos <span class="tab-count" id="countAll">0</span>
-        </button>
-        <button class="tab-btn" data-tab="old" onclick="selectTab('old')">
-          🔥 Olvidados (&gt;1 año) <span class="tab-count" id="countOld">0</span>
-        </button>
-        <button class="tab-btn" data-tab="games" onclick="selectTab('games')">
-          🎮 Juegos <span class="tab-count" id="countGames">0</span>
-        </button>
-        <button class="tab-btn" data-tab="cache" onclick="selectTab('cache')">
-          🧹 Cachés y Temporales <span class="tab-count" id="countCache">0</span>
-        </button>
-        <button class="tab-btn" data-tab="project" onclick="selectTab('project')">
-          ⚠️ Proyectos Activos <span class="tab-count" id="countProject">0</span>
-        </button>
-      </div>
-
-      <div class="search-sort-row">
-        <div class="search-box">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-          <input type="text" id="searchInput" placeholder="Buscar por nombre, carpeta o extensión..." oninput="handleSearch()">
-        </div>
-        <select class="sort-select" id="sortSelect" onchange="handleSort()">
-          <option value="sizeDesc">Mayor tamaño</option>
-          <option value="sizeAsc">Menor tamaño</option>
-          <option value="daysDesc">Más antiguo sin usar</option>
-          <option value="nameAsc">Nombre (A-Z)</option>
-        </select>
-      </div>
+    <div class="tabs" id="tabs">
+      <button class="tab on" data-g="all">🗂️ Todo <span class="n" id="n-all">–</span></button>
+      <button class="tab" data-g="si">✅ Recomendables <span class="n" id="n-si">–</span></button>
+      <button class="tab" data-g="no">⛔ No recomendables <span class="n" id="n-no">–</span></button>
+      <button class="tab" data-g="revisar">⚖️ Revisar <span class="n" id="n-revisar">–</span></button>
+      <button class="tab" data-g="game">🎮 Juegos <span class="n" id="n-game">–</span></button>
+      <button class="tab" data-g="cache">⚡ Cachés <span class="n" id="n-cache">–</span></button>
+      <button class="tab" data-g="nodemods">📦 node_modules <span class="n" id="n-nodemods">–</span></button>
+      <button class="tab" data-g="system">🔒 Sistema y programas <span class="n" id="n-system">–</span></button>
+      <button class="tab" data-g="project">⚠️ Proyectos <span class="n" id="n-project">–</span></button>
     </div>
-
-    <div class="quick-actions">
-      <div>
-        <span>Acciones rápidas automáticas:</span>
+    <div class="row2">
+      <div class="search">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input id="q" type="text" placeholder="Buscar en TODOS los archivos por nombre, carpeta o extensión…">
       </div>
-      <div style="display: flex; gap: 8px;">
-        <button class="btn-quick" onclick="applyPreset('recommended')">✨ Aplicar Recomendaciones Inteligentes</button>
-        <button class="btn-quick" onclick="applyPreset('moveGames')">📦 Mover todos los Juegos a D:\</button>
-        <button class="btn-quick" onclick="applyPreset('deleteCache')">🗑️ Borrar Cachés Temporales</button>
-        <button class="btn-quick" onclick="applyPreset('reset')">🔄 Reiniciar Decisiones</button>
+      <select class="sort" id="sort">
+        <option value="sizeDesc">Mayor tamaño</option>
+        <option value="daysDesc">Más antiguo sin usar</option>
+        <option value="dateAsc">Sin tocar desde hace más tiempo</option>
+        <option value="sizeAsc">Menor tamaño</option>
+        <option value="nameAsc">Nombre (A–Z)</option>
+      </select>
+    </div>
+    <div class="quick">
+      <span>Acciones rápidas (sobre los archivos cargados):</span>
+      <div class="btns">
+        <button class="qbtn" onclick="applyRec()">✨ Aplicar recomendaciones</button>
+        <button class="qbtn" onclick="clearAll()">🔄 Reiniciar decisiones</button>
+        <button class="qbtn" onclick="rescan()">🔁 Reescanear PC</button>
       </div>
     </div>
   </div>
 
-  <div class="files-grid" id="filesGrid">
-    <div class="empty-state">
-      <div class="spinner"></div>
-      <p style="margin-top: 14px;">Cargando archivos del inventario...</p>
-    </div>
+  <div class="listinfo">
+    <span id="infoText">Cargando…</span>
+    <span id="infoSel" style="color:#64748b"></span>
   </div>
+
+  <div class="grid" id="list"></div>
+  <div id="sentinel"></div>
+  <div class="loader" id="moreLoader" style="display:none"><div class="spin"></div> Cargando más…</div>
+  <div class="note" id="capNote" style="display:none"></div>
 </main>
 
-<div class="bottom-drawer">
-  <div class="drawer-stats">
-    <div class="stat-pill">
-      <span class="stat-circle del"></span>
-      <span>Borrar: <strong id="statDelCount">0</strong> (<strong id="statDelSize">0 MB</strong>)</span>
-    </div>
-    <div class="stat-pill">
-      <span class="stat-circle move"></span>
-      <span>Mover a D:\: <strong id="statMoveCount">0</strong> (<strong id="statMoveSize">0 MB</strong>)</span>
-    </div>
-    <div class="stat-pill">
-      <span class="stat-circle keep"></span>
-      <span>Conservar: <strong id="statKeepCount">0</strong></span>
-    </div>
-    <div class="stat-gain" id="statGain">
-      ✨ Liberarás 0 GB en C:
-    </div>
+<div class="drawer">
+  <div class="stats">
+    <div class="sp"><span class="dot d1"></span>Borrar: <b id="cDel">0</b> (<b id="sDel">0 B</b>)</div>
+    <div class="sp"><span class="dot d2"></span>Mover a D:\: <b id="cMov">0</b> (<b id="sMov">0 B</b>)</div>
+    <div class="sp"><span class="dot d3"></span>Conservar: <b id="cKep">0</b></div>
+    <div class="gain" id="gain">✨ Liberarás 0 B en C:</div>
   </div>
-
-  <button class="btn-execute" id="btnExecute" onclick="openConfirmationModal()" disabled>
-    🚀 Ejecutar Cambios (0 seleccionados)
-  </button>
+  <button class="exec" id="execBtn" onclick="openModal()" disabled>🚀 Ejecutar cambios (0)</button>
 </div>
 
-<!-- Modal Confirmation -->
-<div class="modal-backdrop" id="confirmModal">
+<div id="tip"></div>
+
+<div class="backdrop" id="backdrop">
   <div class="modal">
-    <div class="modal-head">
-      <h2>Confirmar Acciones</h2>
-      <button class="btn-reveal" onclick="closeModal()">✕</button>
+    <div class="mhead"><h2>Confirmar cambios</h2><button class="mclose" onclick="closeModal()">✕</button></div>
+    <div class="mbody">
+      <p>Revisa el resumen antes de continuar. Esta acción <b>no se puede deshacer</b>.</p>
+      <div class="warn" id="warnProj" style="display:none">⚠️ <b>Atención:</b> la selección incluye archivos de un proyecto activo. Asegúrate de que no rompes nada.</div>
+      <div><b style="color:#f87171">🗑️ Se borrarán <span id="mDelN">0</span> archivos (<span id="mDelS">0 B</span>):</b>
+        <div class="mlist" id="mDelL"></div></div>
+      <div><b style="color:#60a5fa">📦 Se moverán a D:\ <span id="mMovN">0</span> archivos (<span id="mMovS">0 B</span>):</b>
+        <div class="mlist" id="mMovL"></div></div>
     </div>
-    <div class="modal-body">
-      <p>Revisa atentamente el resumen de cambios antes de continuar:</p>
-
-      <div class="modal-warning" id="projectWarning" style="display: none;">
-        <span>⚠️</span>
-        <div>
-          <strong>¡Atención con tu proyecto actual!</strong><br>
-          Has seleccionado archivos que pertenecen a <code>una carpeta de proyecto</code>. Asegúrate de que no estás borrando dependencias necesarias.
-        </div>
-      </div>
-
-      <div style="margin-top: 12px;">
-        <strong style="color: var(--color-delete);">🗑️ Para Borrar definitivamente (<span id="modalDelCount">0</span> archivos, <span id="modalDelSize">0 GB</span>):</strong>
-        <div class="modal-list" id="modalDelList"></div>
-      </div>
-
-      <div style="margin-top: 14px;">
-        <strong style="color: var(--color-move);">📦 Para Mover a D:\ (<span id="modalMoveCount">0</span> archivos, <span id="modalMoveSize">0 GB</span>):</strong>
-        <div class="modal-list" id="modalMoveList"></div>
-      </div>
-    </div>
-    <div class="modal-foot">
-      <button class="btn-secondary" onclick="closeModal()">Cancelar</button>
-      <button class="btn-danger" id="btnConfirmExecute" onclick="executeBatch()">Confirmar y Ejecutar</button>
+    <div class="mfoot">
+      <button class="bsec" onclick="closeModal()">Cancelar</button>
+      <button class="bdan" id="confirmBtn" onclick="execute()">Confirmar y ejecutar</button>
     </div>
   </div>
 </div>
 
-<!-- Progress Overlay -->
-<div class="progress-overlay" id="progressOverlay">
-  <div class="spinner"></div>
-  <h2 style="font-size: 1.3rem; font-weight: 700;" id="progressTitle">Procesando archivos...</h2>
-  <p style="color: var(--text-secondary); max-width: 400px; text-align: center;" id="progressSubtitle">
-    Moviendo y eliminando los archivos seleccionados. Por favor espera unos momentos.
-  </p>
+<div class="ovl" id="ovl">
+  <div class="spin" style="width:46px;height:46px;border-width:4px"></div>
+  <h2 id="ovlT">Procesando…</h2>
+  <p id="ovlS" style="color:#94a3b8;text-align:center;max-width:420px"></p>
 </div>
 
 <script>
-  let allFiles = [];
-  let currentTab = 'all';
-  let decisions = {}; // path -> 'delete' | 'move' | 'keep'
+/* ================= ESTADO ================= */
+let ready = false, group = 'all', sort = 'sizeDesc', q = '';
+let offset = 0, total = 0, loading = false, hasMore = true, scanning = false;
+const LIMIT = 200, DOM_CAP = 5000;
+let rows = [];                 // posiciones absolutas -> datos
+const decisions = new Map();   // path -> 'del' | 'move' | 'keep'
+let scanTimer = null;
 
-  async function init() {
-    await loadDisks();
-    await loadFiles();
+/* ================= HELPERS ================= */
+const $ = id => document.getElementById(id);
+function esc(s){ return String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function fmtBytes(b){
+  if(!b) return '0 B';
+  if(b>=1073741824) return (b/1073741824).toFixed(2)+' GB';
+  if(b>=1048576) return (b/1048576).toFixed(1)+' MB';
+  if(b>=1024) return (b/1024).toFixed(1)+' KB';
+  return b+' B';
+}
+function fmtAge(d){
+  if(d<=0) return 'hoy';
+  if(d===1) return 'ayer';
+  if(d<31) return 'hace '+d+' días';
+  if(d<365){ const m=Math.round(d/30); return 'hace '+m+' mes'+(m>1?'es':''); }
+  const y=(d/365); return 'hace '+(y<10?y.toFixed(1):Math.round(y))+' años ('+d+' días)';
+}
+function icon(p){
+  const e = (p.split('.').pop()||'').toLowerCase();
+  const m = {exe:'🚀',msi:'📦',dll:'🔧',iso:'💿',zip:'📦',rar:'📦','7z':'📦',tar:'📦',
+    mp4:'🎬',mkv:'🎬',avi:'🎬',mov:'🎬',wmv:'🎬',mp3:'🎵',flac:'🎵',wav:'🎵',
+    jpg:'🖼️',jpeg:'🖼️',png:'🖼️',gif:'🖼️',webp:'🖼️',bmp:'🖼️',
+    pdf:'📄',doc:'📄',docx:'📄',xls:'📊',xlsx:'📊',ppt:'📊',txt:'📝',log:'📝',csv:'📊',
+    json:'📋',xml:'📋',js:'🟨',ts:'🔷',py:'🐍',cs:'🔷',cpp:'💙',h:'💙',
+    pak:'🎮',forge:'🎮',ucas:'🎮',uasset:'🎮',pck:'🎮',bin:'📦',dat:'📦',cache:'⚡',tmp:'⚡',nvph:'⚡'};
+  return m[e] || '📄';
+}
+const CAT = ['', '🔒 Sistema', '📦 Programa instalado', '⚡ Caché / temporal', '🎮 Juego', '⚠️ Proyecto activo', '📦 node_modules'];
+const CATCLS = ['', 'sys', 'sys', 'cache', 'game', 'proj', ''];
+const REC = { 0:['rev','⚖️ Revisar'], 1:['si','✅ Recomendable'], 2:['no','⛔ No recomendable'] };
+
+/* Explica POR QUE se recomienda (o no) eliminar el archivo */
+function why(f){
+  const age = fmtAge(f.d), size = fmtBytes(f.b), r = f.r;
+  switch(f.c){
+    case 1: return 'Archivo de Windows: controla el arranque, la memoria virtual o el sistema de recuperación. Eliminarlo puede impedir que el equipo arranque. Por eso está bloqueado y no se puede borrar desde aquí.';
+    case 2: return 'Forma parte de un programa instalado. Si necesitas espacio, desinstálalo desde Configuración › Aplicaciones: borrar su carpeta a mano deja el programa inservible y sin poder actualizarse.';
+    case 5: return 'Pertenece a un proyecto en el que estás trabajando. Borrarlo rompería el proyecto. Consérvalo.';
+    case 6: return 'node_modules se regenera automáticamente ejecutando "npm install" cuando vuelvas al proyecto. Ocupa mucho espacio en disco y se puede borrar sin ningún problema.';
+    case 3: return 'Es un archivo de caché o temporal. Windows o la aplicación lo vuelven a crear solos en cuanto hacen falta: borrarlo no pierde ningún dato y siempre es seguro.';
+    case 4:
+      if(r===1) return 'Juego sin usar '+age+' y ocupa '+size+'. Lo mejor es MOVERLO a D: para liberar espacio en C: sin perderlo, o borrarlo si ya no vas a volver a jugarlo.';
+      if(r===2) return 'Se ha tocado '+age+', así que parece que lo sigues jugando. No se recomienda eliminarlo todavía.';
+      return 'Juego sin cambios '+age+'. No es obvio si volverás a jugarlo: revísalo y decide tú mismo.';
+    default:
+      if(r===1) return 'Lleva '+age+' sin usarse y ocupa '+size+'. Es un buen candidato: muévelo a D: para conservarlo con espacio, o bórralo si ya no lo necesitas.';
+      if(r===2) return 'Se ha modificado '+age+', lo que indica que probablemente lo sigues usando. No se recomienda eliminarlo todavía.';
+      return 'Sin cambios '+age+'. No es obvio si lo necesitas: revísalo a mano antes de decidir.';
   }
+}
 
-  async function loadDisks() {
+/* ================= ESTADO DEL SERVIDOR ================= */
+async function api(path, opts, attempt){
+  attempt = attempt || 0;
+  try {
+    const r = await fetch(path, opts);
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    return await r.json();
+  } catch (e) {
+    if (attempt < 2 && (!opts || !opts.method)) {
+      await new Promise(r => setTimeout(r, 700 * (attempt + 1)));
+      return api(path, opts, attempt + 1);
+    }
+    throw e;
+  }
+}
+async function refreshState(){
+  const s = await api('/api/state');
+  if (s.ready) { showApp(s); }
+  else { showScan(s); }
+}
+function showScan(s){
+  $('scanScreen').classList.add('show');
+  $('appMain').style.display = 'none';
+  document.querySelector('.drawer').style.display = 'none';
+  scanning = !!s.running;
+  if (scanning){
+    $('scanBtn').disabled = true; $('scanBtn').textContent = '⏳ Escaneo en curso…';
+    $('scanProg').classList.add('show');
+    $('scanTitle').textContent = 'Indexando tu PC…';
+    pollScan();
+  } else if (s.error) {
+    $('scanTitle').textContent = 'No se pudo completar el escaneo';
+    $('scanDesc').textContent = s.error;
+    $('scanBtn').disabled = false; $('scanBtn').textContent = '🔁 Reintentar';
+  } else {
+    $('scanBtn').disabled = false;
+    $('scanBtn').textContent = '🔍 Escanear mi PC ahora';
+    if (!s.available) {
+      $('scanTitle').textContent = 'Todavía no se ha indexado tu PC';
+      $('scanDesc').innerHTML = 'Pulsa el botón para recorrer <b>todos tus discos</b> y construir el índice completo de archivos. ' +
+        'Se hace una sola vez y después la app arranca al instante.';
+    }
+  }
+}
+async function startScan(){
+  $('scanBtn').disabled = true; $('scanBtn').textContent = '⏳ Iniciando…';
+  await api('/api/scan', {method:'POST'});
+  $('scanProg').classList.add('show');
+  pollScan();
+}
+function pollScan(){
+  clearInterval(scanTimer);
+  scanTimer = setInterval(async () => {
     try {
-      const res = await fetch('/api/disks');
-      const data = await res.json();
-      if (data.c) {
-        document.getElementById('diskCPercent').textContent = data.c.percentUsed + '%';
-        document.getElementById('diskCFill').style.width = data.c.percentUsed + '%';
-        if (data.c.percentUsed > 80) document.getElementById('diskCFill').classList.add('warning');
-        document.getElementById('diskCFree').innerHTML = `Libre: <strong>${data.c.freeGB} GB</strong> de ${data.c.sizeGB} GB`;
-      }
-      if (data.d && data.d.available) {
-        document.getElementById('diskDPercent').textContent = data.d.percentUsed + '%';
-        document.getElementById('diskDFill').style.width = Math.max(data.d.percentUsed, 1) + '%';
-        document.getElementById('diskDFree').innerHTML = `Libre: <strong>${data.d.freeGB} GB</strong> de ${data.d.sizeGB} GB`;
-      }
-    } catch (e) {
-      console.error("Error al cargar discos", e);
+      const s = await api('/api/scan');
+      if (s.done && s.ready) { clearInterval(scanTimer); refreshState(); return; }
+      if (s.done && !s.ready) { clearInterval(scanTimer); refreshState(); return; }
+      if (!s.running && !s.done) { return; }
+      $('scFiles').textContent = s.files.toLocaleString('es-ES');
+      $('scSize').textContent = fmtBytes(s.bytes);
+      $('scCur').textContent = s.current || '';
+    } catch(e){}
+  }, 1200);
+}
+async function rescan(){
+  if (!confirm('Esto volverá a recorrer todos tus discos (puede tardar varios minutos). ¿Continuar?')) return;
+  clearInterval(scanTimer);
+  await api('/api/scan', {method:'POST'});
+  showScan({running:true, available:true});
+}
+
+function showApp(s){
+  clearInterval(scanTimer);
+  const firstShow = !ready;
+  $('scanScreen').classList.remove('show');
+  $('appMain').style.display = '';
+  document.querySelector('.drawer').style.display = '';
+  $('totalBadge').style.display = '';
+  $('tbNum').textContent = s.count.toLocaleString('es-ES');
+  $('tbSize').textContent = fmtBytes(s.totalBytes);
+  if (s.rec){
+    $('n-all').textContent = s.count.toLocaleString('es-ES');
+    $('n-si').textContent = s.rec.si.toLocaleString('es-ES');
+    $('n-no').textContent = s.rec.no.toLocaleString('es-ES');
+    $('n-revisar').textContent = s.rec.revisar.toLocaleString('es-ES');
+  }
+  if (s.cat){
+    $('n-game').textContent = s.cat.game.toLocaleString('es-ES');
+    $('n-cache').textContent = s.cat.cache.toLocaleString('es-ES');
+    $('n-nodemods').textContent = s.cat.nodemods.toLocaleString('es-ES');
+    $('n-system').textContent = (s.cat.system + s.cat.program).toLocaleString('es-ES');
+    $('n-project').textContent = s.cat.project.toLocaleString('es-ES');
+  }
+  if (firstShow){ ready = true; resetList(); loadMore(); }
+  ready = true;
+}
+async function loadDisks(){
+  try{
+    const d = await api('/api/disks');
+    if (d.c && d.c.available){
+      $('diskC').style.display='';
+      $('pC').textContent = d.c.percentUsed+'%';
+      $('mC').style.width = d.c.percentUsed+'%';
+      if (d.c.percentUsed>80) $('mC').classList.add('warn');
+      $('fC').innerHTML = '<b>'+d.c.freeGB+' GB</b> de '+d.c.sizeGB+' GB';
     }
-  }
-
-  async function loadFiles() {
-    try {
-      const res = await fetch('/api/files');
-      const data = await res.json();
-      allFiles = data.files || [];
-      updateCounts();
-      renderFiles();
-    } catch (e) {
-      document.getElementById('filesGrid').innerHTML = `
-        <div class="empty-state">
-          <p style="color: var(--color-delete); font-size: 1.1rem;">Error al cargar lista de archivos.</p>
-          <p style="color: var(--text-muted); margin-top: 8px;">Asegúrate de que el servidor local está funcionando.</p>
-        </div>
-      `;
+    if (d.d && d.d.available){
+      $('diskD').style.display='';
+      $('pD').textContent = d.d.percentUsed+'%';
+      $('mD').style.width = Math.max(d.d.percentUsed,1)+'%';
+      $('fD').innerHTML = '<b>'+d.d.freeGB+' GB</b> de '+d.d.sizeGB+' GB';
     }
+  }catch(e){}
+}
+
+/* ================= LISTA ================= */
+function resetList(){
+  offset = 0; total = 0; hasMore = true; loading = false; rows = []; DOM_CAP_SHIFT = 0;
+  $('list').innerHTML = ''; $('capNote').style.display='none';
+  const b = $('capBtn'); if (b) b.remove();
+}
+async function loadMore(){
+  if (loading || !hasMore || !ready) return;
+  if (rows.length >= DOM_CAP + DOM_CAP_SHIFT){ showCap(); return; }
+  loading = true; $('moreLoader').style.display='flex';
+  try{
+    const u = '/api/files?offset='+offset+'&limit='+LIMIT+'&sort='+encodeURIComponent(sort)+
+              '&group='+encodeURIComponent(group)+'&q='+encodeURIComponent(q);
+    const data = await api(u);
+    if (!data.ready) { loading=false; $('moreLoader').style.display='none'; return; }
+    total = data.total;
+    const files = data.files || [];
+    if (!files.length) hasMore = false;
+    const html = files.map((f,i)=>{ rows.push(f); return card(f, rows.length-1); }).join('');
+    $('list').insertAdjacentHTML('beforeend', html);
+    offset += files.length;
+    if (files.length < LIMIT) hasMore = false;
+    updateInfo();
+    if (rows.length >= DOM_CAP + DOM_CAP_SHIFT) showCap();
+  }catch(e){ console.error(e); }
+  loading = false; $('moreLoader').style.display='none';
+}
+function showCap(){
+  $('capNote').style.display='block';
+  $('capNote').innerHTML = 'Se han cargado <b>'+rows.length.toLocaleString('es-ES')+'</b> de '+
+    '<b>'+total.toLocaleString('es-ES')+'</b> archivos para no ralentizar el navegador. '+
+    'Usa la <b>búsqueda</b> o los <b>filtros</b> para afinar, o carga más de forma manual.';
+  if (!$('capBtn')){
+    const b = document.createElement('button');
+    b.id='capBtn'; b.className='qbtn'; b.textContent='⬇️ Cargar 500 más';
+    b.onclick = ()=>{ $('capNote').style.display='none'; DOM_CAP_SHIFT += 500; loadMore(); };
+    $('capNote').appendChild(b);
   }
+}
+let DOM_CAP_SHIFT = 0;
+function updateInfo(){
+  $('infoText').innerHTML = 'Mostrando <b>'+rows.length.toLocaleString('es-ES')+'</b> de <b>'+
+    total.toLocaleString('es-ES')+'</b> archivos' + (q? ' que coinciden con "<b>'+esc(q)+'</b>"':'');
+}
+function card(f, idx){
+  const dec = decisions.get(f.p) || '';
+  const rec = REC[f.r] || REC[0];
+  const cat = f.c ? '<span class="t-cat '+CATCLS[f.c]+'">'+CAT[f.c]+'</span>' : '';
+  const cls = dec==='del'?'a-del':dec==='move'?'a-move':dec==='keep'?'a-keep':'';
+  const name = f.p.split('\\').pop();
+  return '<div class="card '+cls+'" data-i="'+idx+'">'+
+    '<div class="left"><div class="ico">'+icon(f.p)+'</div><div class="meta">'+
+      '<div class="title"><div class="name">'+esc(name)+'</div>'+cat+
+        '<span class="rec '+rec[0]+'" data-why="'+esc(why(f))+'" data-r="'+f.r+'">'+rec[1]+'</span></div>'+
+      '<div class="path" title="'+esc(f.p)+'">'+esc(f.p)+'</div>'+
+      '<div class="tags"><span class="tag t-size">💾 '+fmtBytes(f.b)+'</span>'+
+        '<span class="tag t-age">⏱️ '+fmtAge(f.d)+'</span></div>'+
+    '</div></div>'+
+    '<div class="acts">'+
+      '<button class="abtn del '+(dec==='del'?'on':'')+'" data-a="del">🗑️ Borrar</button>'+
+      '<button class="abtn move '+(dec==='move'?'on':'')+'" data-a="move">📦 Mover a D:\\</button>'+
+      '<button class="abtn keep '+(dec==='keep'?'on':'')+'" data-a="keep">🛡️ Conservar</button>'+
+      '<button class="reveal" data-a="reveal" title="Ver en el explorador">📂</button>'+
+    '</div></div>';
+}
 
-  function updateCounts() {
-    document.getElementById('countAll').textContent = allFiles.length;
-    document.getElementById('countOld').textContent = allFiles.filter(f => f.days > 365).length;
-    document.getElementById('countGames').textContent = allFiles.filter(f => f.category === 'game').length;
-    document.getElementById('countCache').textContent = allFiles.filter(f => f.category === 'cache').length;
-    document.getElementById('countProject').textContent = allFiles.filter(f => f.category === 'current_project').length;
+/* acciones por delegacion */
+$('list').addEventListener('click', e => {
+  const btn = e.target.closest('[data-a]'); if (!btn) return;
+  const card = e.target.closest('.card'); const f = rows[+card.dataset.i]; if (!f) return;
+  const a = btn.dataset.a;
+  if (a === 'reveal'){ fetch('/api/reveal?path='+encodeURIComponent(f.p)); return; }
+  if (decisions.get(f.p) === a) decisions.delete(f.p); else decisions.set(f.p, a);
+  // repinta solo esta tarjeta
+  card.outerHTML = card2(f, +card.dataset.i);
+  updateStats();
+});
+function card2(f, idx){
+  const tmp = document.createElement('div'); tmp.innerHTML = card(f, idx); return tmp.firstElementChild.outerHTML;
+}
+
+/* ================= TOOLTIP ================= */
+const tip = $('tip');
+document.addEventListener('mouseover', e => {
+  const el = e.target.closest && e.target.closest('[data-why]');
+  if (!el) return;
+  const r = el.dataset.r;
+  tip.innerHTML = '<span class="th '+(REC[+r]||REC[0])[0]+'">'+(REC[+r]||REC[0])[1]+'</span>'+esc(el.dataset.why);
+  tip.style.display='block'; tip.classList.add('show'); place(e);
+});
+document.addEventListener('mousemove', e => { if (tip.classList.contains('show')) place(e); });
+document.addEventListener('mouseout', e => {
+  const el = e.target.closest && e.target.closest('[data-why]');
+  if (!el) return;
+  const to = e.relatedTarget;
+  if (to && to.closest && to.closest('[data-why]') === el) return;
+  tip.classList.remove('show'); setTimeout(()=>{ if(!tip.classList.contains('show')) tip.style.display='none'; },150);
+});
+function place(e){
+  const pad=14, w=tip.offsetWidth, h=tip.offsetHeight;
+  let x = e.clientX + pad, y = e.clientY + pad;
+  if (x + w > window.innerWidth - 8) x = e.clientX - w - pad;
+  if (y + h > window.innerHeight - 8) y = e.clientY - h - pad;
+  if (x < 8) x = 8; if (y < 8) y = 8;
+  tip.style.left = x+'px'; tip.style.top = y+'px';
+}
+
+/* ================= CONTROLES ================= */
+$('tabs').addEventListener('click', e => {
+  const t = e.target.closest('.tab'); if (!t) return;
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('on'));
+  t.classList.add('on'); group = t.dataset.g; resetList(); loadMore();
+});
+let qTimer=null;
+$('q').addEventListener('input', e => {
+  clearTimeout(qTimer);
+  $('infoText').innerHTML = '<span style="color:#38bdf8">Buscando…</span>';
+  qTimer = setTimeout(()=>{ q = e.target.value.trim(); resetList(); loadMore(); }, 450);
+});
+$('sort').addEventListener('change', e => { sort = e.target.value; resetList(); loadMore(); });
+
+const io = new IntersectionObserver(en => { if (en[0].isIntersecting) loadMore(); }, {rootMargin:'700px'});
+io.observe($('sentinel'));
+
+/* ================= DECISIONES ================= */
+function applyRec(){
+  let n=0;
+  rows.forEach(f => {
+    if (f.c===1 || f.c===2) return;                 // sistema: nunca
+    if (f.r===1){ decisions.set(f.p, f.b>1073741824 ? 'move' : 'del'); n++; }
+    else if (f.r===2){ decisions.set(f.p,'keep'); n++; }
+    else decisions.delete(f.p);
+  });
+  if (!n) { alert('No hay archivos ya cargados con una recomendación clara.'); return; }
+  redrawAll(); updateStats();
+}
+function clearAll(){ decisions.clear(); redrawAll(); updateStats(); }
+function redrawAll(){
+  document.querySelectorAll('.card').forEach(c => {
+    const i = +c.dataset.i; const f = rows[i]; if (!f) return;
+    const tmp = document.createElement('div'); tmp.innerHTML = card(f, i);
+    c.outerHTML = tmp.innerHTML;
+  });
+}
+function updateStats(){
+  let dc=0,db=0,mc=0,mb=0,kc=0;
+  decisions.forEach((a,p)=>{
+    const f = rows.find(r=>r.p===p); if(!f) return;
+    if(a==='del'){dc++;db+=f.b;} else if(a==='move'){mc++;mb+=f.b;} else if(a==='keep') kc++;
+  });
+  $('cDel').textContent=dc; $('sDel').textContent=fmtBytes(db);
+  $('cMov').textContent=mc; $('sMov').textContent=fmtBytes(mb);
+  $('cKep').textContent=kc;
+  $('gain').textContent='✨ Liberarás '+fmtBytes(db+mb)+' en C:';
+  const n=dc+mc;
+  $('execBtn').textContent='🚀 Ejecutar cambios ('+n+')';
+  $('execBtn').disabled = n===0;
+  $('infoSel').textContent = n? (n+' acciones pendientes · '+kc+' en conservar') : '';
+}
+
+/* ================= EJECUCION ================= */
+function openModal(){
+  const del=[], mov=[]; let db=0,mb=0, hasProj=false;
+  decisions.forEach((a,p)=>{
+    const f = rows.find(r=>r.p===p); if(!f) return;
+    if (f.c===5) hasProj=true;
+    if (a==='del'){ del.push(f); db+=f.b; }
+    else if (a==='move'){ mov.push(f); mb+=f.b; }
+  });
+  $('mDelN').textContent=del.length; $('mDelS').textContent=fmtBytes(db);
+  $('mMovN').textContent=mov.length; $('mMovS').textContent=fmtBytes(mb);
+  const li = (arr,extra)=> arr.length ? arr.map(f=>'<div class="mi"><span>'+esc(f.p.split('\\').pop())+'</span><span style="color:#64748b">'+fmtBytes(f.b)+(extra||'')+'</span></div>').join('') : '<div style="color:#64748b">Ninguno</div>';
+  $('mDelL').innerHTML = li(del);
+  $('mMovL').innerHTML = li(mov, ' → D:\\');
+  $('warnProj').style.display = hasProj? 'block':'none';
+  if (!del.length && !mov.length) return;
+  $('backdrop').classList.add('show');
+}
+function closeModal(){ $('backdrop').classList.remove('show'); }
+async function execute(){
+  closeModal();
+  const actions=[];
+  decisions.forEach((a,p)=>{ if(a==='del'||a==='move') actions.push({path:p, action:a==='del'?'delete':'move'}); });
+  if (!actions.length) return;
+  if (!confirm('Se van a procesar '+actions.length+' archivos (borrado definitivo o movimiento a D:\\). ¿Continuar?')) return;
+  $('ovl').classList.add('show'); $('ovlT').textContent='Procesando…'; $('ovlS').textContent='';
+  try{
+    const r = await fetch('/api/execute', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({actions})});
+    const d = await r.json();
+    const fails = (d.results||[]).filter(x=>!x.success);
+    $('ovlT').textContent='✅ Completado';
+    $('ovlS').innerHTML = 'Se han liberado <b>'+fmtBytes(d.totalFreedBytes)+'</b> en C:.'+
+      (fails.length? '<br><span style="color:#f87171">'+fails.length+' archivos no se pudieron procesar.</span>':'');
+    setTimeout(async ()=>{ decisions.clear(); $('ovl').classList.remove('show'); await loadDisks(); await refreshState(); resetList(); loadMore(); updateStats(); }, 2200);
+  }catch(e){
+    $('ovlT').textContent='⚠️ Error'; $('ovlS').textContent=e.message;
+    setTimeout(()=>$('ovl').classList.remove('show'), 2600);
   }
+}
+document.addEventListener('keydown', e => { if (e.key==='Escape') closeModal(); });
 
-  function getFileIcon(f) {
-    if (f.category === 'game') return '🎮';
-    if (f.category === 'cache') return '⚡';
-    if (f.category === 'current_project') return '💻';
-    if (f.isSystem) return '⚙️';
-    const ext = f.ext;
-    if (['mp4','mkv','avi','mov'].includes(ext)) return '🎬';
-    if (['zip','rar','7z','tar','iso'].includes(ext)) return '📦';
-    if (['exe','msi'].includes(ext)) return '🚀';
-    if (['png','jpg','jpeg','webp','gif'].includes(ext)) return '🖼️';
-    return '📄';
-  }
-
-  function formatBytes(bytes) {
-    if (!bytes) return '0 B';
-    if (bytes >= 1073741824) return (bytes / 1073741824).toFixed(2) + ' GB';
-    if (bytes >= 1048576) return (bytes / 1048576).toFixed(1) + ' MB';
-    return (bytes / 1024).toFixed(1) + ' KB';
-  }
-
-  function formatDays(days) {
-    if (days >= 730) return `Hace ${(days/365).toFixed(1)} años (${days} días)`;
-    if (days >= 365) return `Hace 1 año (${days} días)`;
-    if (days >= 60) return `Hace ${(days/30).toFixed(0)} meses`;
-    if (days > 0) return `Hace ${days} días`;
-    return 'Usado hoy / reciente';
-  }
-
-  function selectTab(tab) {
-    currentTab = tab;
-    document.querySelectorAll('.tab-btn').forEach(btn => {
-      btn.classList.toggle('active', btn.getAttribute('data-tab') === tab);
-    });
-    renderFiles();
-  }
-
-  function handleSearch() {
-    renderFiles();
-  }
-
-  function handleSort() {
-    renderFiles();
-  }
-
-  function getFilteredFiles() {
-    const q = document.getElementById('searchInput').value.trim().toLowerCase();
-    const sortVal = document.getElementById('sortSelect').value;
-
-    let list = allFiles.filter(f => {
-      // Tab filter
-      if (currentTab === 'old' && f.days <= 365) return false;
-      if (currentTab === 'games' && f.category !== 'game') return false;
-      if (currentTab === 'cache' && f.category !== 'cache') return false;
-      if (currentTab === 'project' && f.category !== 'current_project') return false;
-
-      // Text query
-      if (q) {
-        const matchesName = f.name.toLowerCase().includes(q);
-        const matchesPath = f.path.toLowerCase().includes(q);
-        const matchesExt  = f.ext.toLowerCase().includes(q);
-        if (!matchesName && !matchesPath && !matchesExt) return false;
-      }
-      return true;
-    });
-
-    // Sorting
-    if (sortVal === 'sizeDesc') list.sort((a,b) => b.bytes - a.bytes);
-    else if (sortVal === 'sizeAsc') list.sort((a,b) => a.bytes - b.bytes);
-    else if (sortVal === 'daysDesc') list.sort((a,b) => b.days - a.days);
-    else if (sortVal === 'nameAsc') list.sort((a,b) => a.name.localeCompare(b.name));
-
-    return list;
-  }
-
-  function renderFiles() {
-    const list = getFilteredFiles();
-    const grid = document.getElementById('filesGrid');
-
-    if (list.length === 0) {
-      grid.innerHTML = `
-        <div class="empty-state">
-          <p style="font-size: 1.1rem; color: var(--text-secondary);">No hay archivos que coincidan con la búsqueda o pestaña.</p>
-        </div>
-      `;
-      updateSummary();
-      return;
-    }
-
-    grid.innerHTML = list.map(f => {
-      const dec = decisions[f.path] || 'none';
-      const icon = getFileIcon(f);
-
-      let cardClass = 'file-card';
-      if (dec === 'delete') cardClass += ' action-delete';
-      if (dec === 'move') cardClass += ' action-move';
-      if (dec === 'keep') cardClass += ' action-keep';
-
-      let specialTag = '';
-      if (f.category === 'current_project') {
-        specialTag = '<span class="tag tag-project">⚠️ Proyecto Activo</span>';
-      } else if (f.category === 'game') {
-        specialTag = '<span class="tag tag-game">🎮 Juego Antiguo</span>';
-      } else if (f.category === 'cache') {
-        specialTag = '<span class="tag tag-cache">⚡ Caché / Temporal</span>';
-      } else if (f.isSystem) {
-        specialTag = '<span class="tag tag-system">🔒 Archivo de Sistema</span>';
-      }
-
-      const isLocked = f.isSystem;
-
-      return `
-        <div class="${cardClass}" id="card-${encodeURIComponent(f.path)}">
-          <div class="file-left">
-            <div class="file-icon-box">${icon}</div>
-            <div class="file-meta">
-              <div class="file-title-row">
-                <div class="file-name">${escapeHtml(f.name)}</div>
-                ${specialTag}
-              </div>
-              <div class="file-path" title="${escapeHtml(f.path)}">${escapeHtml(f.path)}</div>
-              <div class="file-tags">
-                <span class="tag tag-size">💾 ${formatBytes(f.bytes)}</span>
-                <span class="tag tag-age">⏱️ ${formatDays(f.days)}</span>
-                ${dec === 'move' ? `<span class="tag" style="background:#0284c7; color:#fff;">➡️ Destino: D:\\...</span>` : ''}
-              </div>
-            </div>
-          </div>
-
-          <div class="file-actions">
-            ${isLocked ? `
-              <span style="font-size: 0.8rem; color: var(--text-muted); font-style: italic;">Protegido por Windows</span>
-            ` : `
-              <button class="act-btn del ${dec==='delete'?'active':''}" onclick="setDecision('${escapeJs(f.path)}', 'delete')">
-                🗑️ Borrar
-              </button>
-              <button class="act-btn move ${dec==='move'?'active':''}" onclick="setDecision('${escapeJs(f.path)}', 'move')">
-                📦 Mover a D:\\
-              </button>
-              <button class="act-btn keep ${dec==='keep'?'active':''}" onclick="setDecision('${escapeJs(f.path)}', 'keep')">
-                🛡️ Conservar
-              </button>
-            `}
-            <button class="btn-reveal" title="Ver en el Explorador de Windows" onclick="revealFile('${escapeJs(f.path)}')">
-              📂
-            </button>
-          </div>
-        </div>
-      `;
-    }).join('');
-
-    updateSummary();
-  }
-
-  function setDecision(path, act) {
-    if (decisions[path] === act) {
-      delete decisions[path];
-    } else {
-      decisions[path] = act;
-    }
-    renderFiles();
-  }
-
-  function updateSummary() {
-    let delCount = 0, delBytes = 0;
-    let moveCount = 0, moveBytes = 0;
-    let keepCount = 0;
-
-    allFiles.forEach(f => {
-      const act = decisions[f.path];
-      if (act === 'delete') {
-        delCount++;
-        delBytes += f.bytes;
-      } else if (act === 'move') {
-        moveCount++;
-        moveBytes += f.bytes;
-      } else if (act === 'keep') {
-        keepCount++;
-      }
-    });
-
-    document.getElementById('statDelCount').textContent = delCount;
-    document.getElementById('statDelSize').textContent = formatBytes(delBytes);
-    document.getElementById('statMoveCount').textContent = moveCount;
-    document.getElementById('statMoveSize').textContent = formatBytes(moveBytes);
-    document.getElementById('statKeepCount').textContent = keepCount;
-
-    const totalFreedOnC = delBytes + moveBytes;
-    document.getElementById('statGain').textContent = `✨ Liberarás ${formatBytes(totalFreedOnC)} en C:`;
-
-    const btnExec = document.getElementById('btnExecute');
-    const totalSelected = delCount + moveCount;
-    btnExec.textContent = `🚀 Ejecutar Cambios (${totalSelected} a procesar)`;
-    btnExec.disabled = (totalSelected === 0);
-  }
-
-  function applyPreset(preset) {
-    if (preset === 'recommended') {
-      allFiles.forEach(f => {
-        if (f.isSystem) return;
-        if (f.category === 'current_project') decisions[f.path] = 'keep';
-        else if (f.category === 'cache') decisions[f.path] = 'delete';
-        else if (f.category === 'game') decisions[f.path] = 'move';
-        else if (f.days > 730 && f.bytes > 500 * 1024 * 1024) decisions[f.path] = 'move';
-        else decisions[f.path] = 'keep';
-      });
-    } else if (preset === 'moveGames') {
-      allFiles.filter(f => f.category === 'game').forEach(f => {
-        decisions[f.path] = 'move';
-      });
-    } else if (preset === 'deleteCache') {
-      allFiles.filter(f => f.category === 'cache').forEach(f => {
-        decisions[f.path] = 'delete';
-      });
-    } else if (preset === 'reset') {
-      decisions = {};
-    }
-    renderFiles();
-  }
-
-  async function revealFile(path) {
-    try {
-      await fetch('/api/reveal?path=' + encodeURIComponent(path));
-    } catch (e) {
-      console.error(e);
-    }
-  }
-
-  function openConfirmationModal() {
-    const toDelete = allFiles.filter(f => decisions[f.path] === 'delete');
-    const toMove   = allFiles.filter(f => decisions[f.path] === 'move');
-
-    let totalDelBytes = toDelete.reduce((a,b)=>a+b.bytes, 0);
-    let totalMoveBytes = toMove.reduce((a,b)=>a+b.bytes, 0);
-
-    document.getElementById('modalDelCount').textContent = toDelete.length;
-    document.getElementById('modalDelSize').textContent = formatBytes(totalDelBytes);
-    document.getElementById('modalMoveCount').textContent = toMove.length;
-    document.getElementById('modalMoveSize').textContent = formatBytes(totalMoveBytes);
-
-    const delList = document.getElementById('modalDelList');
-    if (toDelete.length === 0) {
-      delList.innerHTML = '<div style="color:var(--text-muted);">Ninguno</div>';
-    } else {
-      delList.innerHTML = toDelete.map(f => `
-        <div class="modal-list-item">
-          <span>${escapeHtml(f.name)}</span>
-          <span style="color:var(--text-muted);">${formatBytes(f.bytes)}</span>
-        </div>
-      `).join('');
-    }
-
-    const moveList = document.getElementById('modalMoveList');
-    if (toMove.length === 0) {
-      moveList.innerHTML = '<div style="color:var(--text-muted);">Ninguno</div>';
-    } else {
-      moveList.innerHTML = toMove.map(f => `
-        <div class="modal-list-item">
-          <span>${escapeHtml(f.name)}</span>
-          <span style="color:#38bdf8;">➡️ D:\\...</span>
-        </div>
-      `).join('');
-    }
-
-    // Check if touching current project
-    const hasProject = [...toDelete, ...toMove].some(f => f.category === 'current_project');
-    document.getElementById('projectWarning').style.display = hasProject ? 'flex' : 'none';
-
-    document.getElementById('confirmModal').classList.add('show');
-  }
-
-  function closeModal() {
-    document.getElementById('confirmModal').classList.remove('show');
-  }
-
-  async function executeBatch() {
-    closeModal();
-    const overlay = document.getElementById('progressOverlay');
-    overlay.classList.add('show');
-
-    const actions = [];
-    allFiles.forEach(f => {
-      const act = decisions[f.path];
-      if (act === 'delete' || act === 'move') {
-        actions.push({ path: f.path, action: act });
-      }
-    });
-
-    try {
-      const res = await fetch('/api/execute', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ actions })
-      });
-      const data = await res.json();
-
-      document.getElementById('progressTitle').textContent = "¡Completado con éxito!";
-      document.getElementById('progressSubtitle').innerHTML = `
-        Se han liberado <strong>${data.totalFreedGB} GB</strong> en tu disco C:.<br>
-        Actualizando lista de archivos...
-      `;
-
-      setTimeout(async () => {
-        decisions = {};
-        overlay.classList.remove('show');
-        await loadDisks();
-        await loadFiles();
-      }, 1800);
-
-    } catch (e) {
-      alert("Hubo un error al ejecutar las acciones: " + e.message);
-      overlay.classList.remove('show');
-    }
-  }
-
-  function escapeHtml(s) {
-    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-  }
-  function escapeJs(s) {
-    return String(s).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
-  }
-
-  init();
+/* ================= INICIO ================= */
+(async function init(){
+  await loadDisks();
+  await refreshState();
+})();
 </script>
-
 </body>
 </html>

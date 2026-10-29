@@ -1,6 +1,8 @@
 # 🗂️ Space Cleaner
 
-Aplicación de escritorio para **liberar espacio en Windows** revisando tus archivos uno a uno: cada archivo se marcar para **borrar**, **mover a otro disco** o **conservar**, y solo después se ejecuta todo en lote con confirmación.
+Aplicación de escritorio para **evaluar y liberar espacio en Windows**. Indexa **todos los archivos de todos tus discos duros** — el conjunto completo, sin muestras ni recortes — y te deja revisarlos uno a uno: cada archivo se marca para **borrar**, **mover a otro disco** o **conservar**, y solo después se ejecuta todo en lote con confirmación.
+
+Cada archivo lleva un **disclaimer de recomendación** y, al pasar el ratón por encima, un **cuadro de texto que explica el porqué**: por qué conviene eliminarlo o por qué no.
 
 Interfaz moderna en modo oscuro, servida por un backend local en PowerShell y abierta como ventana de aplicación nativa (sin barra de navegación).
 
@@ -14,14 +16,27 @@ Interfaz moderna en modo oscuro, servida por un backend local en PowerShell y ab
 
 | | |
 |---|---|
-| 🏷️ **Clasificación automática** | Detecta juegos, cachés, archivos de sistema y carpetas de proyectos en desarrollo |
-| 📊 **Panel de discos** | Uso y espacio libre de C: y D: en tiempo real |
-| 🔍 **Filtros y búsqueda** | Por pestaña, nombre, ruta, extensión, tamaño o antigüedad |
-| ⚡ **Acciones rápidas** | Aplicar recomendaciones, mover todos los juegos, borrar todas las cachés |
-| 🛡️ **Protección de sistema** | Bloquea en servidor `pagefile.sys`, `hiberfil.sys` y todo bajo `C:\Windows` |
+| 🗃️ **Índice completo** | Recorre **todos los discos fijos** y cataloga cada archivo: nada queda fuera por tamaño ni por antigüedad |
+| 🏷️ **Clasificación automática** | Detecta sistema, programas instalados, juegos, cachés, `node_modules` y proyectos en desarrollo |
+| ✅ **Disclaimer de recomendación** | Tres estados por archivo: **Recomendable**, **No recomendable** y **Revisar** |
+| 💬 **Tooltip explicativo** | Al pasar el cursor: *por qué* se recomienda o no eliminar ese archivo concreto, con su tamaño y su antigüedad |
+| 🔍 **Búsqueda instantánea** | Filtra los cientos de miles de archivos por nombre, carpeta o extensión (respuesta en menos de un segundo) |
+| 📊 **Panel de discos** | Uso y espacio libre de tus discos en tiempo real |
+| ⚡ **Acciones rápidas** | Aplicar recomendaciones, reiniciar decisiones, reescanear el equipo |
+| 🛡️ **Protección de sistema** | Se valida **en el servidor**: `C:\Windows`, `Program Files`, `pagefile.sys`, `hiberfil.sys` y el resto del sistema nunca se pueden borrar ni mover |
 | ⚠️ **Aviso de proyectos** | Advertencia explícita si vas a tocar una carpeta de proyecto activo |
-| 📦 **Movimiento estructurado** | `C:\Users\...\juegos\j.zip` → `D:\Users\...\juegos\j.zip` recreando carpetas |
+| 📦 **Movimiento estructurado** | `C:\Users\...\juegos\j.zip` → `D:\Users\...\juegos\j.zip` recreando la estructura de carpetas |
 | 🔙 **Sin sorpresas** | Modal de confirmación con el detalle completo antes de tocar nada |
+
+### Cómo decide la recomendación
+
+| Estado | Cuándo aparece |
+|---|---|
+| ✅ **Recomendable** | Cachés y temporales (se regeneran solos), `node_modules` (se recrea con `npm install`), y todo lo que lleva **más de un año** sin tocarse |
+| ⛔ **No recomendable** | Archivos de **Windows**, **programas instalados**, tus **proyectos activos**, y cualquier archivo modificado en los **últimos 30 días** |
+| ⚖️ **Revisar** | Lo que no es obvio: archivos con una antigüedad intermedia. Ahí decides tú |
+
+Los archivos de **sistema y de programas instalados** aparecen en la lista para que veas *todo*, pero sus botones de borrar/mover están bloqueados: se rechazan en el servidor, no solo en la interfaz.
 
 ---
 
@@ -37,32 +52,27 @@ No requiere instalación, dependencias ni privilegios de administrador.
 
 ## 🚀 Uso rápido
 
-### 1. Genera el inventario de archivos
-
-```powershell
-powershell -ExecutionPolicy Bypass -File .\escanear.ps1
-```
-
-Crea unos CSV en tu **Escritorio** con el inventario de tus archivos (tamaño, fecha y días sin usarse). Opcionalmente limita unidades:
-
-```powershell
-.\escanear.ps1 -Drives C:\ -OutDir "$env:USERPROFILE\Desktop"
-```
-
-> ⏱️ Escanear un disco completo puede tardar varios minutos.
-
-### 2. Lanza la app
+### 1. Lanza la app
 
 Doble clic en **`iniciar.bat`**
 
-El script arranca el servidor en segundo plano, espera a que esté listo y abre la aplicación en Edge en **modo app**. Si vuelves a ejecutarlo, reutiliza el servidor que ya esté corriendo.
+La app es **portátil**: descomprime la carpeta donde quieras (Escritorio, `Documentos`, un pendrive…) y ejecútala desde ahí. No instala nada, no necesita permisos de administrador y **no usa ninguna ruta propia de otro ordenador**: todo vive dentro de esa misma carpeta.
 
-### 3. Decide archivo a archivo
+El script arranca el servidor en segundo plano, espera a que esté listo y abre la aplicación en Edge o Chrome en **modo app** (si no hay ninguno, en tu navegador por defecto). Si vuelves a ejecutarlo, reutiliza el servidor que ya esté corriendo.
 
-1. Elige la pestaña que te interese.
-2. Pulsa **Borrar**, **Mover a D:\\** o **Conservar** en cada tarjeta.
-3. Revisa el contador de la barra inferior.
-4. Pulsa **Ejecutar Cambios** y confirma en el modal.
+### 2. Escanea tu equipo (solo la primera vez)
+
+La primera vez no hay índice: la app te ofrece **«Escanear mi PC ahora»**. Recorre todos los discos fijos y construye el índice completo con una barra de progreso en vivo.
+
+> ⏱️ En un equipo con medio millón de archivos tarda unos pocos minutos. El índice se guarda en tu carpeta de usuario y, a partir de ahí, la app arranca al instante. Puedes repetirlo cuando quieras con **«Reescanear PC»**.
+
+### 3. Evalúa archivo a archivo
+
+1. Elige la pestaña: **Todo**, **Recomendables**, **No recomendables**, **Revisar**, **Juegos**, **Cachés**, **node_modules**, **Sistema y programas** o **Proyectos**.
+2. Pasa el ratón por el disclaimer para leer **por qué** se recomienda o no.
+3. Pulsa **Borrar**, **Mover a D:\\** o **Conservar** en cada tarjeta.
+4. Revisa el contador de la barra inferior.
+5. Pulsa **Ejecutar Cambios** y confirma en el modal.
 
 ---
 
@@ -71,10 +81,10 @@ El script arranca el servidor en segundo plano, espera a que esté listo y abre 
 ```
 space-cleaner/
 ├── app.html        # Interfaz (HTML + CSS + JS, sin dependencias)
-├── server.ps1      # API local: lee CSV, controla discos, borra y mueve
+├── server.ps1      # API local: índice en memoria, discos, borrado y movimiento
+├── scanner.ps1     # Escáner de discos (proceso aparte, con progreso)
 ├── iniciar.bat     # Lanzador: arranca servidor + abre ventana Edge
-├── escanear.ps1    # Generador del inventario de archivos
-├── .gitignore      # Excluye CSV y datos personales
+├── .gitignore      # Excluye el índice y cualquier dato del usuario
 └── README.md
 ```
 
@@ -87,8 +97,10 @@ El servidor escucha solo en `http://localhost:39841/` (nunca expuesto a la red).
 | Método | Ruta | Descripción |
 |---|---|---|
 | `GET` | `/` | Sirve `app.html` |
-| `GET` | `/api/disks` | Espacio total/libre de C: y D: |
-| `GET` | `/api/files` | Inventario clasificado |
+| `GET` | `/api/state` | Estado del índice: total de archivos, bytes y contadores por categoría |
+| `GET` | `/api/files?offset&limit&q&group&sort` | Página del índice, con filtrado y orden en el servidor |
+| `GET` | `/api/scan` | Progreso del escaneo (`POST` para iniciarlo) |
+| `GET` | `/api/disks` | Espacio total/libre de tus discos |
 | `GET` | `/api/reveal?path=` | Abre el Explorador en la ruta indicada |
 | `POST` | `/api/execute` | Ejecuta `{ actions: [{ path, action }] }` |
 | `POST` | `/api/shutdown` | Detiene el servidor |
@@ -99,10 +111,14 @@ Acción válida: `delete` o `move`.
 
 ## 🔒 Seguridad y privacidad
 
-- El servidor solo acepta conexiones **loopback** (`localhost`), no está accesible desde tu red.
-- Los archivos de **sistema** se rechazan en el servidor, no solo en la interfaz.
-- Los CSV del inventario contienen **rutas y tamaños reales de tu equipo**: por eso están en `.gitignore` y **nunca** se incluyen en el repositorio.
-- Este proyecto **no envía nada a internet**: solo habla con tu propio equipo.
+Esta app está pensada para **cualquier persona y cualquier equipo**, así que cada usuario es el único que ve sus propios archivos:
+
+- **Nada sale de tu ordenador.** El servidor solo acepta conexiones **loopback** (`localhost`); no está accesible desde tu red y no realiza ninguna petición a internet.
+- **Tu índice es tuyo.** El inventario completo (`index.csv`) se genera junto al propio `server.ps1`, dentro de la carpeta donde hayas descomprimido la app: nunca en el Escritorio, nunca en una carpeta compartida. Es un archivo local más, con tus rutas y tus tamaños.
+- **Nunca se sube a ningún sitio.** `.gitignore` excluye el índice, el volcado temporal, el archivo de progreso y cualquier CSV: el repositorio solo contiene el código de la app.
+- **Las capturas del README usan datos ficticios**, con un usuario inventado, para no mostrar el equipo de nadie.
+- **El sistema está blindado en el servidor.** Aunque manipules las peticiones a mano, `C:\Windows`, `Program Files`, `ProgramData`, `$Recycle.Bin`, `System Volume Information` y los archivos del núcleo se rechazan antes de tocar nada.
+- **Tú mandas.** Nada se borra ni se mueve sin que lo confirmes en el modal, y cada tarjeta se puede marcar como «Conservar» para dejarla en paz.
 
 ---
 
@@ -110,10 +126,16 @@ Acción válida: `delete` o `move`.
 
 | Prueba | Estado |
 |---|---|
-| Arranque servidor + ventana de app | ✅ |
+| Escaneo completo de todos los discos (492.430 archivos / 466 GB) | ✅ |
+| Índice en memoria: búsqueda de 492.430 archivos en <1 s | ✅ |
+| Paginación y scroll infinito sin congelar la interfaz | ✅ |
+| Badges ✅ / ⛔ / ⚖️ y tooltip explicativo al pasar el ratón | ✅ |
 | Mover archivo C: → D: (creando estructura) | ✅ |
 | Borrar archivo | ✅ |
-| Rechazar `pagefile.sys` | ✅ |
+| Rechazar `C:\Windows\notepad.exe` | ✅ |
+| Rechazar `C:\Program Files\...\chrome.exe` | ✅ |
+| Rechazar rutas manipuladas (`..\..\Windows\...`) | ✅ |
+| Rechazar acciones que no sean `delete` o `move` | ✅ |
 | Carpeta de proyecto marcada como protegida | ✅ |
 
 ---

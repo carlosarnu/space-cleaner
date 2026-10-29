@@ -3,6 +3,11 @@
 inventario_*.csv
 *.csv
 
+# Índice generado por el escaneo (rutas y tamaños reales del equipo)
+index.csv
+index.tmp
+scan_progress.json
+
 # Estado en tiempo de ejecución
 port.txt
 *.log
