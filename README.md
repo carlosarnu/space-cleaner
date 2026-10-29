@@ -140,6 +140,23 @@ Esta app está pensada para **cualquier persona y cualquier equipo**, así que c
 
 ---
 
+## 🤖 Desarrollo asistido con agentes de IA
+
+Esta app se ha desarrollado con **agentes de IA** como parte del flujo de trabajo.
+
+- **El agente de IA** se encarga de la implementación, de escribir el código de la interfaz, el servidor PowerShell y el escáner, y de ejecutar las pruebas manuales que recoge la tabla de arriba.
+- **Carlos Arnanz** define los requisitos (qué indexa, qué se protege, cómo se decide cada recomendación), toma las decisiones de diseño y de seguridad, revisa cada cambio y valida la app en un equipo real antes de darla por terminada.
+
+La app se ha verificado contra un equipo con más de 492.000 archivos; los resultados de esa validación son los de la sección «Verificado».
+
+---
+
 ## 📄 Licencia
 
 MIT
+
+---
+
+## 👤 Autor
+
+**Carlos Arnanz** — [github.com/carlosarnu](https://github.com/carlosarnu)
